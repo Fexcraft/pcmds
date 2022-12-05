@@ -3,3 +3,5 @@ pcmds.sign_registered=&bSign registered into PCMDS &aand selected for editing.
 pcmds.sign_deactivated=&aSign is now &cdeactivated&a.
 pcmds.sign_activated=&aSign is now active.
 pcmds.sign_selected=&aSign selected for editing.
+pcmds.cmd.editmode_on=&eEditMode toggled on, &aclick a sign to edit it.
+pcmds.cmd.editmode_off=&eEditMode toggled off.
