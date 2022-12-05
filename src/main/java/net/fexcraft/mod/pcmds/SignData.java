@@ -13,8 +13,12 @@ import net.minecraftforge.event.entity.player.PlayerInteractEvent;
  */
 public class SignData {
 	
+	public String[] text;;
 	
-	
+	public SignData(int length){
+		text = new String[4];
+	}
+
 	public SignData load(NBTTagCompound com){
 		
 		return this;
@@ -27,6 +31,11 @@ public class SignData {
 
 	public void process(SignCapability cap, PlayerInteractEvent event, IBlockState state, TileEntitySign tile){
 		//
+	}
+
+	public boolean valid(){
+		//
+		return false;
 	}
 
 }
