@@ -26,8 +26,8 @@ import net.minecraftforge.server.permission.PermissionAPI;
  */
 public class SignCapImpl implements SignCapability.Listener {
 	
-	private static final ResourceLocation REGNAME = new ResourceLocation("pcmds:sign");
-	private SignData data;
+	public static final ResourceLocation REGNAME = new ResourceLocation("pcmds:sign");
+	protected SignData data;
 	private boolean active;
 
 	@Override
@@ -54,7 +54,7 @@ public class SignCapImpl implements SignCapability.Listener {
 			tile.signText[0] = formattedComponent("&0[&6PcmdS&0]");
 			tile.signText[1] = formattedComponent("&einactive");
 			sendUpdate(tile);
-			data = new SignData();
+			data = new SignData(tile.signText.length);
 			cap.setActive();
 			return true;
 		}
@@ -106,9 +106,18 @@ public class SignCapImpl implements SignCapability.Listener {
 		}
 		NBTTagCompound com = (NBTTagCompound)nbt;
 		if(com.hasKey("sign:data")){
-			data = new SignData().load(com.getCompoundTag("sign:data"));
+			data = new SignData(4).load(com.getCompoundTag("sign:data"));
 		}
 		active = com.getBoolean("sign:active");
+	}
+
+	public void setActive(TileEntitySign sign){
+		active = true;
+		for(int i = 0; i < data.text.length; i++){
+			if(i >= sign.signText.length) break;
+			sign.signText[i] = formattedComponent(data.text[i]);
+		}
+		sendUpdate(sign);
 	}
 	
 }
