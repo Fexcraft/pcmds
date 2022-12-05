@@ -1,0 +1,16 @@
+[
+	{
+	  "modid": "pcmds",
+	  "name": "Payable Command Signs",
+	  "description": "Mod that allows configuring sings executing commands, which can be paid using FSMM (direct or via account) currency.",
+	  "version": "${version}",
+	  "mcversion": "${mcversion}",
+	  "url": "https://fexcraft.net/wiki",
+	  "updateUrl": "",
+	  "authorList": ["Ferdinand (FEX___96)"],
+	  "credits": "The Forge and FML guys, for making FML.",
+	  "logoFile": "",
+	  "screenshots": [],
+	  "dependencies": [ "fcl", "fsmm" ]
+	}
+]
