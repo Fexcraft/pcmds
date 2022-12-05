@@ -12,9 +12,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.logging.log4j.Logger;
 
 import net.fexcraft.lib.common.math.Time;
+import net.fexcraft.lib.mc.capabilities.sign.SignCapability;
 import net.fexcraft.lib.mc.capabilities.sign.SignCapabilitySerializer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.CapabilityInject;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
@@ -41,6 +44,8 @@ public class PayableCommandSigns {
     public static Timer TIMER;
     private static Logger logger;
 	public static final ConcurrentHashMap<UUID, EditMode> SELSIGNS = new ConcurrentHashMap<>();
+	@CapabilityInject(SignCapability.class)
+	public static final Capability<SignCapability> SIGNCAP = null;
 
     @EventHandler
     public void preInit(FMLPreInitializationEvent event){
