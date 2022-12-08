@@ -113,9 +113,15 @@ public class SignCapImpl implements SignCapability.Listener {
 
 	public void setActive(TileEntitySign sign){
 		active = true;
-		for(int i = 0; i < data.text.length; i++){
-			if(i >= sign.signText.length) break;
-			sign.signText[i] = formattedComponent(data.text[i]);
+		if(data.notext()){
+			sign.signText[0] = formattedComponent("&0[&6PcmdS&0]");
+			sign.signText[1] = formattedComponent("&aactive");
+		}
+		else{
+			for(int i = 0; i < data.text.length; i++){
+				if(i >= sign.signText.length) break;
+				sign.signText[i] = formattedComponent(data.text[i]);
+			}
 		}
 		sendUpdate(sign);
 	}
