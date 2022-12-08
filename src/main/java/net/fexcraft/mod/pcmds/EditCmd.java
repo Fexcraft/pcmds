@@ -2,10 +2,14 @@ package net.fexcraft.mod.pcmds;
 
 import static net.fexcraft.mod.pcmds.PayableCommandSigns.SIGNCAP;
 
+import java.util.ArrayList;
+import java.util.Map.Entry;
+
 import net.fexcraft.lib.mc.api.registry.fCommand;
 import net.fexcraft.lib.mc.capabilities.sign.SignCapability;
 import net.fexcraft.lib.mc.utils.Formatter;
 import net.fexcraft.lib.mc.utils.Print;
+import net.fexcraft.mod.fsmm.util.Config;
 import net.fexcraft.mod.pcmds.PayableCommandSigns.EditMode;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
@@ -54,6 +58,7 @@ public class EditCmd extends CommandBase {
     	EditMode mode = PayableCommandSigns.SELSIGNS.get(player.getGameProfile().getId());
     	SignCapability cap = getCap(sender.getEntityWorld(), mode);
     	SignCapImpl impl = cap == null ? null : cap.getListener(SignCapImpl.class, SignCapImpl.REGNAME);
+    	SignData data = impl == null ? null : impl.data;
 		switch(args[0]){
 		case "editmode":{
 			mode.set_edit = !mode.set_edit;
@@ -76,8 +81,37 @@ public class EditCmd extends CommandBase {
 	    	}
     		return;
 		}
+		case "status":{
+    		Print.chat(sender, "&0[&6PcmdS&0]&e>>&2==== === == =");
+    		if(err(sender, impl, data)) return;
+    		Print.chat(sender, trs("cmd.status.type", data.type.name().toLowerCase()));
+    		for(String str : data.type.cmd_events){
+        		Print.chat(sender, trs("cmd.status.event", str));
+        		ArrayList<String> list = data.events.get(str);
+        		if(list == null){
+            		Print.chat(sender, trs("cmd.status.event.none"));
+        		}
+        		else{
+        			for(String entry : list){
+                		Print.chat(sender, trs("cmd.status.event.cmd", entry));
+        			}
+        		}
+    		}
+    		Print.chat(sender, trs("cmd.status.price", Config.getWorthAsString(data.price)));
+    		Print.chat(sender, trs("cmd.status.settings"));
+    		if(data.settings.isEmpty()){
+        		Print.chat(sender, trs("cmd.status.settings.none"));
+        		Print.chat(sender, trs("cmd.status.settings.none_info"));
+    		}
+    		else{
+    			for(Entry<String, Object> entry : data.settings.entrySet()){
+            		Print.chat(sender, trs("cmd.status.settings.entry", entry.getKey(), entry.getValue()));
+    			}
+    		}
+			return;
+		}
 		case "help":
-    		Print.chat(sender, "&0[&6PcmdS&0]&e>>&2===========");
+    		Print.chat(sender, "&0[&6PcmdS&0]&e>>&2==== === == =");
     		ITextComponent comp0 = new TextComponentString(Formatter.format("&2WIKI: "));
     		ITextComponent comp1 = new TextComponentString(Formatter.format("&7&nhttps://fexcraft.net/wiki/mod/pcmds"));
     		comp1.getStyle().setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://fexcraft.net/wiki/mod/pcmds"));
@@ -86,10 +120,13 @@ public class EditCmd extends CommandBase {
     		Print.chat(sender, "/pmcds editmode");
     		Print.chat(sender, "/pmcds activate");
     		Print.chat(sender, "/pmcds status");
-    		Print.chat(sender, "/pmcds cmd <cmd + args>");
+    		Print.chat(sender, "&2---- --- -- -");
+    		Print.chat(sender, "/pmcds cmd <event> <cmd + args>");
     		Print.chat(sender, "/pmcds text <line> <text>");
     		Print.chat(sender, "/pmcds type <process-type>");
     		Print.chat(sender, "/pmcds set <setting> <value>");
+    		Print.chat(sender, "/pmcds set list");
+    		Print.chat(sender, "&2---- --- -- -");
     		Print.chat(sender, "/pmcds save <id>");
     		Print.chat(sender, "/pmcds load <id> <args>");
     		Print.chat(sender, "/pmcds export");
@@ -101,6 +138,18 @@ public class EditCmd extends CommandBase {
 		}
     }
 
+	private boolean err(ICommandSender sender, SignCapImpl impl, SignData data){
+		if(impl == null){
+			Print.chat(sender, "error, no cap impl");
+			return true;
+		}
+		if(data == null){
+			Print.chat(sender, "error, no sign data");
+			return true;
+		}
+		return false;
+	}
+
 	private SignCapability getCap(World world, EditMode mode){
 		if(mode.pos == null) return null;
 		TileEntity tile = world.getTileEntity(mode.pos);
@@ -111,6 +160,11 @@ public class EditCmd extends CommandBase {
 	@SuppressWarnings("deprecation")
 	public static String trs(String string){
 		return I18n.translateToLocal("pcmds." + string);
+	}
+
+	@SuppressWarnings("deprecation")
+	public static String trs(String string, Object... strs){
+		return I18n.translateToLocalFormatted("pcmds." + string, strs);
 	}
 
 }
