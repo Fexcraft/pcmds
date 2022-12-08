@@ -1,6 +1,10 @@
 package net.fexcraft.mod.pcmds;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+
 import net.fexcraft.lib.mc.capabilities.sign.SignCapability;
+import net.fexcraft.lib.mc.utils.Static;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntitySign;
@@ -13,10 +17,14 @@ import net.minecraftforge.event.entity.player.PlayerInteractEvent;
  */
 public class SignData {
 	
-	public String[] text;;
+	public String[] text;
+	public Type type = Type.BASIC;
+	public HashMap<String, ArrayList<String>> events = new HashMap<>();
+	public HashMap<String, Object> settings = new HashMap<>();
+	public long price;
 	
 	public SignData(int length){
-		text = new String[4];
+		text = new String[length];
 	}
 
 	public SignData load(NBTTagCompound com){
@@ -31,11 +39,30 @@ public class SignData {
 
 	public void process(SignCapability cap, PlayerInteractEvent event, IBlockState state, TileEntitySign tile){
 		//
+		Static.getServer().commandManager.executeCommand(new CommandSender(event.getWorld(), event.getEntityPlayer()), "say test");
 	}
 
 	public boolean valid(){
 		//
-		return false;
+		return true;
+	}
+	
+	public static enum Type {
+		
+		BASIC("interact"), RENT("start", "end");
+		
+		public String[] cmd_events;
+	
+		Type(String... cmds){
+			this.cmd_events = cmds;
+		}
+		
+	}
+
+	public boolean notext(){
+		if(text == null || text.length == 0) return true;
+		for(String str : text) if(str != null && str.length() > 0) return false;
+		return true;
 	}
 
 }
