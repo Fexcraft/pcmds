@@ -104,7 +104,7 @@ public class EditCmd extends CommandBase {
         		Print.chat(sender, trs("cmd.status.settings.none_info"));
     		}
     		else{
-    			for(Entry<String, Object> entry : data.settings.entrySet()){
+    			for(Entry<String, String> entry : data.settings.entrySet()){
             		Print.chat(sender, trs("cmd.status.settings.entry", entry.getKey(), entry.getValue()));
     			}
     		}
@@ -140,7 +140,7 @@ public class EditCmd extends CommandBase {
 	    		}
 				return;
 			}
-			data.type = SignData.Type.valueOf(args[1]);
+			data.type = SignData.Type.valueOf(args[1].toUpperCase());
 			Print.chat(sender, trs("cmd.type.updated"));
 			return;
 		}
@@ -177,7 +177,10 @@ public class EditCmd extends CommandBase {
 				return;
 			}
 			String val = args[2];
-			data.settings.put(set, val);
+			if(set.equals("fee")){
+				data.price = Long.parseLong(val);
+			}
+			else data.settings.put(set, val);
 			Print.chat(sender, trs("cmd.set.updated", set, val));
 			return;
 		}
