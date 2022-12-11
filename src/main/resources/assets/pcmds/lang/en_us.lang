@@ -17,11 +17,11 @@ pcmds.cmd.status.settings.none=- no settings set
 pcmds.cmd.status.settings.none_info=- use &e/pcmds set list&f to get a list
 pcmds.cmd.status.settings.entry=- %s: %s
 pcmds.cmd.text.updated=Text for line %s updated.
-pcmds.cmd.type.available=&5Available types:
+pcmds.cmd.type.available=&dAvailable types:
 pcmds.cmd.type.basic=Basic sign type, runs an single event on each interact.
 pcmds.cmd.type.rent=Sign for "rent" operations, runs an event on first interaction, and then a second after a set timeframe.
 pcmds.cmd.type.updated=Sign Type updated.
-pcmds.cmd.set.available=&5Available types:
+pcmds.cmd.set.available=&dAvailable settings:
 pcmds.cmd.set.fee=Fee for using this sign. &e(1000 = 1F$ !)
 pcmds.cmd.set.limit=Limit how many times this sign can be used by a player.
 pcmds.cmd.set.renew=Interval in which this sign's usage limits get reset.
