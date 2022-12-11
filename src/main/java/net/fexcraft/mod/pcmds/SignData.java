@@ -1,11 +1,16 @@
 package net.fexcraft.mod.pcmds;
 
+import static net.fexcraft.mod.pcmds.EditCmd.trs;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
 import net.fexcraft.lib.mc.capabilities.sign.SignCapability;
+import net.fexcraft.lib.mc.utils.Print;
 import net.fexcraft.lib.mc.utils.Static;
+import net.fexcraft.mod.fsmm.api.Account;
+import net.fexcraft.mod.fsmm.util.DataManager;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.command.ICommandManager;
 import net.minecraft.entity.player.EntityPlayer;
@@ -27,7 +32,7 @@ public class SignData {
 	public Type type = Type.BASIC;
 	public HashMap<String, ArrayList<String>> events = new HashMap<>();
 	public HashMap<String, String> settings = new HashMap<>();
-	public long price;
+	public long price = 10000;
 	
 	public SignData(int length){
 		text = new String[length];
@@ -72,10 +77,23 @@ public class SignData {
 	}
 
 	public void process(SignCapability cap, PlayerInteractEvent event, IBlockState state, TileEntitySign tile){
+		EntityPlayer player = event.getEntityPlayer();
+		if(price > 0){
+			Account account = DataManager.getAccount("player:" + event.getEntityPlayer(), false, false);
+			if(account == null || account.getBalance() < price){
+				Print.chat(player, trs("not_enough_money"));
+				return;
+			}
+			account.setBalance(account.getBalance() - price);
+		}
 		ICommandManager cmdman = Static.getServer().commandManager;
 		ArrayList<String> cmds = events.get(type.cmd_events[0]);
 		if(cmds == null || cmds.isEmpty()) return;
-		for(String cmd : cmds) cmdman.executeCommand(new CommandSender(event.getWorld(), event.getEntityPlayer()), format(cmd, tile, state, event.getEntityPlayer()));
+		for(String cmd : cmds){
+			cmd = format(cmd, tile, state, player);
+			if(cmd.startsWith("p!")) cmdman.executeCommand(player, cmd.substring(2));
+			else cmdman.executeCommand(new CommandSender(event.getWorld(), event.getEntityPlayer()), format(cmd, tile, state, player));
+		}
 	}
 
 	private String format(String cmd, TileEntitySign tile, IBlockState state, EntityPlayer player){
@@ -97,21 +115,21 @@ public class SignData {
 	
 	public static enum Type {
 		
-		BASIC("interact"), RENT("start", "end");
+		BASIC(0, "interact"), RENT(1, "start", "end");
 		
 		public String[] cmd_events;
 		public String[] settings;
 	
-		Type(String... cmds){
+		Type(int sidx, String... cmds){
 			cmd_events = cmds;
-			settings = genset();
+			settings = genset(sidx);
 		}
 
-		private String[] genset(){
-			if(this == BASIC){
+		private String[] genset(int sidx){
+			if(sidx == 0){
 				return new String[]{ "fee", "limit", "renew" };
 			}
-			else if(this == RENT){
+			if(sidx == 1){
 				return new String[]{ "fee", "duration" };
 			}
 			return new String[]{ "fee" };
