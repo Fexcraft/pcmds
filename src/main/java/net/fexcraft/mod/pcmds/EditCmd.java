@@ -88,12 +88,12 @@ public class EditCmd extends CommandBase {
     		for(String str : data.type.cmd_events){
         		Print.chat(sender, trs("cmd.status.event", str));
         		ArrayList<String> list = data.events.get(str);
-        		if(list == null){
+        		if(list == null || list.isEmpty()){
             		Print.chat(sender, trs("cmd.status.event.none"));
         		}
         		else{
-        			for(String entry : list){
-                		Print.chat(sender, trs("cmd.status.event.cmd", entry));
+        			for(int i = 0; i < list.size(); i++){
+                		Print.chat(sender, i + " " + trs("cmd.status.event.cmd", list.get(i)));
         			}
         		}
     		}
@@ -110,8 +110,130 @@ public class EditCmd extends CommandBase {
     		}
 			return;
 		}
+		case "text":{
+			if(args.length < 3){
+	    		Print.chat(sender, "&a---- --- -- -");
+	    		Print.chat(sender, "/pcmds text <line> <text>");
+	    		Print.chat(sender, "/pcmds text 0 example text");
+				return;
+			}
+			int idx = Integer.parseInt(args[1]);
+			String str = args[2];
+			if(args.length > 3) for(int i = 3; i < args.length; i++) str += " " + args[i];
+			data.text[idx] = str;
+			Print.chat(sender, trs("cmd.text.updated", idx));
+			return;
+		}
+		case "type":{
+			if(args.length < 2){
+	    		Print.chat(sender, "&a---- --- -- -");
+	    		Print.chat(sender, "/pcmds type <process-type>");
+	    		Print.chat(sender, "/pcmds type list");
+	    		return;
+			}
+			if(args[1].equals("list")){
+	    		Print.chat(sender, "&a---- --- -- -");
+	    		Print.chat(sender, trs("cmd.type.available"));
+	    		for(SignData.Type type : SignData.Type.values()){
+	    			Print.chat(sender, "&a- " + type.name().toLowerCase());
+	    			Print.chat(sender, trs("cmd.type." + type.name().toLowerCase()));
+	    		}
+				return;
+			}
+			data.type = SignData.Type.valueOf(args[1]);
+			Print.chat(sender, trs("cmd.type.updated"));
+			return;
+		}
+		case "set":{
+			if(args.length < 2){
+	    		Print.chat(sender, "&a---- --- -- -");
+	    		Print.chat(sender, "/pcmds set <setting> <value>");
+	    		Print.chat(sender, "/pcmds set list");
+	    		return;
+			}
+			if(args[1].equals("list")){
+	    		Print.chat(sender, "&a---- --- -- -");
+	    		Print.chat(sender, trs("cmd.set.available"));
+	    		for(String set : data.type.settings){
+	    			Print.chat(sender, "&a- " + set);
+	    			Print.chat(sender, trs("cmd.set." + set));
+	    		}
+				return;
+			}
+			if(args.length < 3){
+				Print.chat(sender, "cmd.set.missing_value");
+				return;
+			}
+			String set = args[1];
+			boolean found = false;
+			for(String str : data.type.settings){
+				if(str.equals(set)){
+					found = true;
+					break;
+				}
+			}
+			if(!found){
+				Print.chat(sender, "cmd.set.not_found");
+				return;
+			}
+			String val = args[2];
+			data.settings.put(set, val);
+			Print.chat(sender, trs("cmd.set.updated", set, val));
+			return;
+		}
+		case "iknow":{
+			mode.knows = true;
+			Print.chat(sender, trs("cmd.knows"));
+			return;
+		}
+		case "add":{
+			if(args.length < 3){
+	    		Print.chat(sender, "&a---- --- -- -");
+	    		Print.chat(sender, "/pcmds add <event> <cmd + args>");
+	    		return;
+			}
+			String event = findEvent(sender, data, args[1]);
+			if(event == null) return;
+			if(!mode.knows){
+				Print.chat(sender, trs("cmd.warning"));
+				Print.chat(sender, trs("cmd.iknow"));
+			}
+			String rest = args[2];
+			if(args.length > 3) for(int i = 3; i < args.length; i++) rest += " " + args[i];
+			if(!data.events.containsKey(event)) data.events.put(event, new ArrayList<>());
+			data.events.get(event).add(rest);
+			Print.chat(sender, trs("cmd.cmd.added"));
+			return;
+		}
+		case "rem": case "remove":{
+			if(args.length < 3){
+	    		Print.chat(sender, "&a---- --- -- -");
+	    		Print.chat(sender, "/pcmds remove <event> <index>");
+	    		return;
+			}
+			String event = findEvent(sender, data, args[1]);
+			if(event == null) return;
+			int idx = Integer.parseInt(args[2]);
+			ArrayList<String> list = data.events.get(event);
+			if(list == null || idx < 0 || idx >= list.size()) return;
+			list.remove(idx);
+			Print.chat(sender, trs("cmd.cmd.removed"));
+			return;
+		}
+		case "clear":{
+			if(args.length < 2){
+	    		Print.chat(sender, "&a---- --- -- -");
+	    		Print.chat(sender, "/pcmds clear <event>");
+	    		return;
+			}
+			String event = findEvent(sender, data, args[1]);
+			if(event == null) return;
+			data.events.remove(event);
+			Print.chat(sender, trs("cmd.cmd.cleared"));
+			return;
+		}
 		case "help":
-    		Print.chat(sender, "&0[&6PcmdS&0]&e>>&2==== === == =");
+    		Print.chat(sender, "&0[&6PcmdS&0]&2==== === == =");
     		ITextComponent comp0 = new TextComponentString(Formatter.format("&2WIKI: "));
     		ITextComponent comp1 = new TextComponentString(Formatter.format("&7&nhttps://fexcraft.net/wiki/mod/pcmds"));
     		comp1.getStyle().setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://fexcraft.net/wiki/mod/pcmds"));
@@ -121,9 +243,12 @@ public class EditCmd extends CommandBase {
     		Print.chat(sender, "/pcmds activate");
     		Print.chat(sender, "/pcmds status");
     		Print.chat(sender, "&2---- --- -- -");
-    		Print.chat(sender, "/pcmds cmd <event> <cmd + args>");
+    		Print.chat(sender, "/pcmds add <event> <cmd + args>");
+    		Print.chat(sender, "/pcmds remove <event> <index>");
+    		Print.chat(sender, "/pcmds clear <event>");
     		Print.chat(sender, "/pcmds text <line> <text>");
     		Print.chat(sender, "/pcmds type <process-type>");
+    		Print.chat(sender, "/pcmds type list");
     		Print.chat(sender, "/pcmds set <setting> <value>");
     		Print.chat(sender, "/pcmds set list");
     		Print.chat(sender, "&2---- --- -- -");
@@ -137,6 +262,21 @@ public class EditCmd extends CommandBase {
 			return;
 		}
     }
+
+	private String findEvent(ICommandSender sender, SignData data, String string){
+		boolean found = false;
+		for(String str : data.type.cmd_events){
+			if(str.equals(string)){
+				found = true;
+				break;
+			}
+		}
+		if(!found){
+			Print.chat(sender, "cmd.cmd.event_not_found");
+			return null;
+		}
+		return string;
+	}
 
 	private boolean err(ICommandSender sender, SignCapImpl impl, SignData data){
 		if(impl == null){
