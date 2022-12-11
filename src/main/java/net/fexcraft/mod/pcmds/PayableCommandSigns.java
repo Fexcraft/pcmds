@@ -88,6 +88,7 @@ public class PayableCommandSigns {
 		
 		public boolean set_edit = false;
 		public BlockPos pos;
+		public boolean knows;
 		
 	}
     
