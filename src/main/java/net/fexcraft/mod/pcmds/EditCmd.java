@@ -2,6 +2,13 @@ package net.fexcraft.mod.pcmds;
 
 import static net.fexcraft.mod.pcmds.PayableCommandSigns.SIGNCAP;
 
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map.Entry;
 
@@ -14,6 +21,9 @@ import net.fexcraft.mod.pcmds.PayableCommandSigns.EditMode;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.nbt.CompressedStreamTools;
+import net.minecraft.nbt.JsonToNBT;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.text.ITextComponent;
@@ -82,7 +92,7 @@ public class EditCmd extends CommandBase {
     		return;
 		}
 		case "status":{
-    		Print.chat(sender, "&0[&6PcmdS&0]&e>>&2==== === == =");
+    		Print.chat(sender, "&0[&6PcmdS&0]&e&2==== === == =");
     		if(err(sender, impl, data)) return;
     		Print.chat(sender, trs("cmd.status.type", data.type.name().toLowerCase()));
     		for(String str : data.type.cmd_events){
@@ -161,7 +171,7 @@ public class EditCmd extends CommandBase {
 				return;
 			}
 			if(args.length < 3){
-				Print.chat(sender, "cmd.set.missing_value");
+				Print.chat(sender, trs("cmd.set.missing_value"));
 				return;
 			}
 			String set = args[1];
@@ -173,7 +183,7 @@ public class EditCmd extends CommandBase {
 				}
 			}
 			if(!found){
-				Print.chat(sender, "cmd.set.not_found");
+				Print.chat(sender, trs("cmd.set.not_found", set));
 				return;
 			}
 			String val = args[2];
@@ -205,7 +215,7 @@ public class EditCmd extends CommandBase {
 			if(args.length > 3) for(int i = 3; i < args.length; i++) rest += " " + args[i];
 			if(!data.events.containsKey(event)) data.events.put(event, new ArrayList<>());
 			data.events.get(event).add(rest);
-			Print.chat(sender, trs("cmd.cmd.added"));
+			Print.chat(sender, trs("cmd.cmd.added", event));
 			return;
 		}
 		case "rem": case "remove":{
@@ -220,7 +230,7 @@ public class EditCmd extends CommandBase {
 			ArrayList<String> list = data.events.get(event);
 			if(list == null || idx < 0 || idx >= list.size()) return;
 			list.remove(idx);
-			Print.chat(sender, trs("cmd.cmd.removed"));
+			Print.chat(sender, trs("cmd.cmd.removed", event, idx));
 			return;
 		}
 		case "clear":{
@@ -232,7 +242,58 @@ public class EditCmd extends CommandBase {
 			String event = findEvent(sender, data, args[1]);
 			if(event == null) return;
 			data.events.remove(event);
-			Print.chat(sender, trs("cmd.cmd.cleared"));
+			Print.chat(sender, trs("cmd.cmd.cleared", event));
+			return;
+		}
+		case "export":{
+    		StringSelection strsel = new StringSelection(data.save(new NBTTagCompound()).toString());
+    		Toolkit.getDefaultToolkit().getSystemClipboard().setContents(strsel, null);
+			Print.chat(sender, trs("cmd.export"));
+			return;
+		}
+		case "import":{
+			Clipboard cp = Toolkit.getDefaultToolkit().getSystemClipboard();
+			Transferable trs = cp.getContents(null);
+			if(!trs.isDataFlavorSupported(DataFlavor.stringFlavor)) return;
+			try{
+				data.load(JsonToNBT.getTagFromJson(trs.getTransferData(DataFlavor.stringFlavor).toString()));
+			}
+			catch(Exception e){
+				e.printStackTrace();
+			}
+			Print.chat(sender, trs("cmd.import"));
+			return;
+		}
+		case "save":{
+			if(args.length < 2){
+	    		Print.chat(sender, "&a---- --- -- -");
+	    		Print.chat(sender, "/pcmds save <id>");
+	    		return;
+			}
+			File file = new File(PayableCommandSigns.CFGPATH, "/" + args[1] + ".nbt");
+			try{
+				CompressedStreamTools.write(data.save(new NBTTagCompound()), file);
+			}
+			catch (IOException e){
+				e.printStackTrace();
+			}
+			Print.chat(sender, trs("cmd.save", args[1]));
+			return;
+		}
+		case "load":{
+			if(args.length < 2){
+	    		Print.chat(sender, "&a---- --- -- -");
+	    		Print.chat(sender, "/pcmds load <id>");
+	    		return;
+			}
+			File file = new File(PayableCommandSigns.CFGPATH, "/" + args[1] + ".nbt");
+			try{
+				data.load(CompressedStreamTools.read(file));
+			}
+			catch (IOException e){
+				e.printStackTrace();
+			}
+			Print.chat(sender, trs("cmd.load", args[1]));
 			return;
 		}
 		case "help":
@@ -256,9 +317,9 @@ public class EditCmd extends CommandBase {
     		Print.chat(sender, "/pcmds set list");
     		Print.chat(sender, "&2---- --- -- -");
     		Print.chat(sender, "/pcmds save <id>");
-    		Print.chat(sender, "/pcmds load <id> <args>");
+    		Print.chat(sender, "/pcmds load <id>");
     		Print.chat(sender, "/pcmds export");
-    		Print.chat(sender, "/pcmds import <args>");
+    		Print.chat(sender, "/pcmds import");
 			return;
 		default:
     		Print.chat(sender, trs("cmd.unknown_arg"));
