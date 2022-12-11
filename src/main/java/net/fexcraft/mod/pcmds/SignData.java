@@ -52,9 +52,21 @@ public class SignData {
 		BASIC("interact"), RENT("start", "end");
 		
 		public String[] cmd_events;
+		public String[] settings;
 	
 		Type(String... cmds){
-			this.cmd_events = cmds;
+			cmd_events = cmds;
+			settings = genset();
+		}
+
+		private String[] genset(){
+			if(this == BASIC){
+				return new String[]{ "fee", "limit", "renew" };
+			}
+			else if(this == RENT){
+				return new String[]{ "fee", "duration" };
+			}
+			return new String[]{ "fee" };
 		}
 		
 	}
