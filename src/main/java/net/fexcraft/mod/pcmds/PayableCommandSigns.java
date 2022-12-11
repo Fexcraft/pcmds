@@ -1,10 +1,13 @@
 package net.fexcraft.mod.pcmds;
 
+import java.io.File;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.util.Date;
+import java.util.Map.Entry;
 import java.util.Timer;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -14,6 +17,8 @@ import org.apache.logging.log4j.Logger;
 import net.fexcraft.lib.common.math.Time;
 import net.fexcraft.lib.mc.capabilities.sign.SignCapability;
 import net.fexcraft.lib.mc.capabilities.sign.SignCapabilitySerializer;
+import net.minecraft.nbt.CompressedStreamTools;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.Capability;
@@ -22,7 +27,9 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLServerAboutToStartEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartedEvent;
+import net.minecraftforge.fml.common.event.FMLServerStoppingEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent;
@@ -44,20 +51,39 @@ public class PayableCommandSigns {
     public static Timer TIMER;
     private static Logger logger;
 	public static final ConcurrentHashMap<UUID, EditMode> SELSIGNS = new ConcurrentHashMap<>();
+	public static final ConcurrentHashMap<DimPos, SignData> FLOATING = new ConcurrentHashMap<>();
 	@CapabilityInject(SignCapability.class)
 	public static final Capability<SignCapability> SIGNCAP = null;
+	public static File CFGPATH, ROOTPATH;
 
     @EventHandler
     public void preInit(FMLPreInitializationEvent event){
         logger = event.getModLog();
 		SignCapabilitySerializer.addListener(SignCapImpl.class);
 		MinecraftForge.EVENT_BUS.register(new PlayerLogInOutHandler());
+		CFGPATH = new File(ROOTPATH = event.getModConfigurationDirectory(), "/pcmds");
+		if(!CFGPATH.exists()) CFGPATH.mkdirs();
     }
 
     @EventHandler
     public void init(FMLInitializationEvent event){
 		PermissionAPI.registerNode(EDIT_SIGN_PERM, DefaultPermissionLevel.OP, "Permission to edit [PCMDS] Sings");
     }
+    
+	@EventHandler
+	public void serverStarting(FMLServerAboutToStartEvent event){
+		File cache = new File(ROOTPATH, "/pcmds_cache.nbt");
+		if(!cache.exists()) return;
+		try{
+			NBTTagCompound com = CompressedStreamTools.read(cache);
+			for(String str : com.getKeySet()){
+				FLOATING.put(new DimPos(str), new SignData(4).load(com.getCompoundTag(str)));
+			}
+		}
+		catch(IOException e){
+			e.printStackTrace();
+		}
+	}
     
 	@EventHandler
 	public void serverStarted(FMLServerStartedEvent event){
@@ -67,6 +93,23 @@ public class PayableCommandSigns {
 		while((mid += 3600000) < date);
 		if(TIMER == null){
 			(TIMER = new Timer()).schedule(new ScheduledCheck(), new Date(mid), 3600000);
+		}
+	}
+    
+	@EventHandler
+	public void serverStopping(FMLServerStoppingEvent event){
+		File cache = new File(ROOTPATH, "/pcmds_cache.nbt");
+		NBTTagCompound com = new NBTTagCompound();
+		for(Entry<DimPos, SignData> entry : FLOATING.entrySet()){
+			NBTTagCompound tag = new NBTTagCompound();
+			entry.getValue().save(tag);
+			com.setTag(entry.getKey().toString(), tag);
+		}
+		try{
+			CompressedStreamTools.write(com, cache);
+		}
+		catch(IOException e){
+			e.printStackTrace();
 		}
 	}
 	
@@ -89,6 +132,30 @@ public class PayableCommandSigns {
 		public boolean set_edit = false;
 		public BlockPos pos;
 		public boolean knows;
+		
+	}
+	
+	public static class DimPos {
+		
+		public BlockPos pos;
+		public int dim;
+		
+		public DimPos(String str){
+			String[] split = str.split(":");
+			dim = Integer.parseInt(split[0]);
+			pos = BlockPos.fromLong(Long.parseLong(split[1]));
+		}
+
+		public boolean equals(Object obj){
+			if(obj instanceof DimPos == false) return false;
+			DimPos o = (DimPos)obj;
+			return o.pos.equals(pos) && o.dim == dim;
+		}
+		
+		@Override
+		public String toString(){
+			return dim + ":" + pos.toLong();
+		}
 		
 	}
     
