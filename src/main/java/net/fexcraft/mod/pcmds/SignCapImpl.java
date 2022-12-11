@@ -51,8 +51,10 @@ public class SignCapImpl implements SignCapability.Listener {
 			}
 			PayableCommandSigns.SELSIGNS.get(event.getEntityPlayer().getGameProfile().getId()).pos = tile.getPos();
 			Print.chat(event.getEntityPlayer(), trs("sign_registered"));
-			tile.signText[0] = formattedComponent("&0[&6PcmdS&0]");
-			tile.signText[1] = formattedComponent("&einactive");
+			tile.signText[0] = formattedComponent("&0- - - -");
+			tile.signText[1] = formattedComponent("&0[&6PcmdS&0]");
+			tile.signText[2] = formattedComponent("&einactive");
+			tile.signText[3] = formattedComponent("&0- - - -");
 			sendUpdate(tile);
 			data = new SignData(tile.signText.length);
 			cap.setActive();
@@ -63,8 +65,10 @@ public class SignCapImpl implements SignCapability.Listener {
 			if(mode.set_edit){
 				mode.pos = tile.getPos();
 				active = false;
-				tile.signText[0] = formattedComponent("&0[&6PcmdS&0]");
-				tile.signText[1] = formattedComponent("&einactive");
+				tile.signText[0] = formattedComponent("&0- - - -");
+				tile.signText[1] = formattedComponent("&0[&6PcmdS&0]");
+				tile.signText[2] = formattedComponent("&einactive");
+				tile.signText[3] = formattedComponent("&0- - - -");
 				sendUpdate(tile);
 				Print.chat(event.getEntityPlayer(), trs("sign_deactivated"));
 				Print.chat(event.getEntityPlayer(), trs("sign_selected"));
@@ -114,8 +118,10 @@ public class SignCapImpl implements SignCapability.Listener {
 	public void setActive(TileEntitySign sign){
 		active = true;
 		if(data.notext()){
-			sign.signText[0] = formattedComponent("&0[&6PcmdS&0]");
-			sign.signText[1] = formattedComponent("&aactive");
+			sign.signText[0] = formattedComponent("&0- - - -");
+			sign.signText[1] = formattedComponent("&0[&6PcmdS&0]");
+			sign.signText[2] = formattedComponent("&aactive");
+			sign.signText[3] = formattedComponent("&0- - - -");
 		}
 		else{
 			for(int i = 0; i < data.text.length; i++){
