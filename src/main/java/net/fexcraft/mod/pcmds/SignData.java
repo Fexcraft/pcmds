@@ -54,7 +54,7 @@ public class SignData {
 		events.clear();
 		uses.clear();
 		for(String str : type.settings){
-			if(com.hasKey("set:" + str)) settings.put(str, com.getInteger(str));
+			if(com.hasKey("set:" + str)) settings.put(str, com.getInteger("set:" + str));
 		}
 		for(String event : type.cmd_events){
 			if(com.hasKey("event:" + event)){
@@ -114,7 +114,7 @@ public class SignData {
 			Integer l = uses.get(uuid);
 			if(l != null && l >= settings.get("limit", 0)){
 				boolean renew = settings.get("renew", 0) > 0;
-				Print.chat(player, renew ? trs("reached_use_limit_wait") : trs("reached_use_limit"));
+				Print.chat(player, renew ? trs("reached_use_limit_wait", timer) : trs("reached_use_limit"));
 				return;
 			}
 		}
