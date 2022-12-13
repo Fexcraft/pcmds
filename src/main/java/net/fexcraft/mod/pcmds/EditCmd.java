@@ -83,7 +83,6 @@ public class EditCmd extends CommandBase {
 	    	}
 	    	else{
 	    		if(!impl.data.valid()){
-		    		impl.setActive(cap.getTileEntity());
 		    		Print.chat(sender, trs("sign_incomplete"));
 	    		}
 	    		else{
