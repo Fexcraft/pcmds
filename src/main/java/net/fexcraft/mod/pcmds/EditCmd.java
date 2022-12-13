@@ -69,6 +69,8 @@ public class EditCmd extends CommandBase {
     	SignCapability cap = getCap(sender.getEntityWorld(), mode);
     	SignCapImpl impl = cap == null ? null : cap.getListener(SignCapImpl.class, SignCapImpl.REGNAME);
     	SignData data = impl == null ? null : impl.data;
+		SignData fldt = PayableCommandSigns.FLOATING.get(data.pos);
+		if(fldt != null && impl != null && data != fldt) data = impl.data = fldt;
 		switch(args[0]){
 		case "editmode":{
 			mode.set_edit = !mode.set_edit;
@@ -114,7 +116,7 @@ public class EditCmd extends CommandBase {
         		Print.chat(sender, trs("cmd.status.settings.none_info"));
     		}
     		else{
-    			for(Entry<String, String> entry : data.settings.entrySet()){
+    			for(Entry<String, Integer> entry : data.settings.entrySet()){
             		Print.chat(sender, trs("cmd.status.settings.entry", entry.getKey(), entry.getValue()));
     			}
     		}
@@ -132,6 +134,7 @@ public class EditCmd extends CommandBase {
 			if(args.length > 3) for(int i = 3; i < args.length; i++) str += " " + args[i];
 			data.text[idx] = str;
 			Print.chat(sender, trs("cmd.text.updated", idx));
+			cap.getTileEntity().markDirty();
 			return;
 		}
 		case "type":{
@@ -152,6 +155,7 @@ public class EditCmd extends CommandBase {
 			}
 			data.type = SignData.Type.valueOf(args[1].toUpperCase());
 			Print.chat(sender, trs("cmd.type.updated"));
+			cap.getTileEntity().markDirty();
 			return;
 		}
 		case "set":{
@@ -187,11 +191,10 @@ public class EditCmd extends CommandBase {
 				return;
 			}
 			String val = args[2];
-			if(set.equals("fee")){
-				data.price = Long.parseLong(val);
-			}
-			else data.settings.put(set, val);
+			if(set.equals("fee")) data.price = Long.parseLong(val);
+			else data.settings.put(set, Integer.parseInt(val));
 			Print.chat(sender, trs("cmd.set.updated", set, val));
+			cap.getTileEntity().markDirty();
 			return;
 		}
 		case "iknow":{
@@ -216,6 +219,7 @@ public class EditCmd extends CommandBase {
 			if(!data.events.containsKey(event)) data.events.put(event, new ArrayList<>());
 			data.events.get(event).add(rest);
 			Print.chat(sender, trs("cmd.cmd.added", event));
+			cap.getTileEntity().markDirty();
 			return;
 		}
 		case "rem": case "remove":{
@@ -231,6 +235,7 @@ public class EditCmd extends CommandBase {
 			if(list == null || idx < 0 || idx >= list.size()) return;
 			list.remove(idx);
 			Print.chat(sender, trs("cmd.cmd.removed", event, idx));
+			cap.getTileEntity().markDirty();
 			return;
 		}
 		case "clear":{
@@ -243,6 +248,7 @@ public class EditCmd extends CommandBase {
 			if(event == null) return;
 			data.events.remove(event);
 			Print.chat(sender, trs("cmd.cmd.cleared", event));
+			cap.getTileEntity().markDirty();
 			return;
 		}
 		case "export":{
@@ -262,6 +268,7 @@ public class EditCmd extends CommandBase {
 				e.printStackTrace();
 			}
 			Print.chat(sender, trs("cmd.import"));
+			cap.getTileEntity().markDirty();
 			return;
 		}
 		case "save":{
@@ -294,6 +301,7 @@ public class EditCmd extends CommandBase {
 				e.printStackTrace();
 			}
 			Print.chat(sender, trs("cmd.load", args[1]));
+			cap.getTileEntity().markDirty();
 			return;
 		}
 		case "help":
