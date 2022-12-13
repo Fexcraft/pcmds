@@ -24,8 +24,8 @@ pcmds.cmd.type.updated=Sign Type updated.
 pcmds.cmd.set.available=&dAvailable settings:
 pcmds.cmd.set.fee=Fee for using this sign. &e(1000 = 1F$ !)
 pcmds.cmd.set.limit=Limit how many times this sign can be used by a player.
-pcmds.cmd.set.renew=Interval in which this sign's usage limits get reset.
-pcmds.cmd.set.duration=How long till this sign's second event is executed (e.g. renting duration).
+pcmds.cmd.set.renew=Interval in which this sign's usage limits get reset (in minutes).
+pcmds.cmd.set.duration=How long till this sign's second event is executed (e.g. renting duration) in minutes.
 pcmds.cmd.set.updated=Sign Setting %s updated to '%s'.
 pcmds.cmd.set.missing_value=Please specify a setting value.
 pcmds.cmd.set.not_found=Setting '%s' not found for this sign Type.
@@ -42,3 +42,6 @@ pcmds.cmd.save=Sign saved as template to file (%s).
 pcmds.cmd.load=Sign template loaded from file (%s).
 pcmds.cmd.unknown_arg=&eUnknown command argument.
 pcmds.not_enough_money=&bNot enough money on account.
+pcmds.reached_use_limit=You reached the use limit of this sign.
+pcmds.reached_use_limit_wait=You reached the use limit of this sign, it will renew in %s minutes.
+pcmds.sign_already_rented=This sign is already rented, it will be available in %s minutes.
