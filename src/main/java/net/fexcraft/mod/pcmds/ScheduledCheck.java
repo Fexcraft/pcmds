@@ -16,11 +16,11 @@ public class ScheduledCheck extends TimerTask {
 		Static.getServer().addScheduledTask(() -> {
 			PayableCommandSigns.FLOATING.values().removeIf(data -> {
 				try{
+					data.timer--;
 					if(data.timer <= 0){
 						data.processTimed();
 						return true;
 					}
-					else data.timer--;
 				}
 				catch(Throwable e){
 					e.printStackTrace();
