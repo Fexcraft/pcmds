@@ -112,7 +112,7 @@ public class SignData {
 		UUID uuid = player.getGameProfile().getId();
 		if(type == Type.BASIC && settings.get("limit", 0) > 0){
 			Integer l = uses.get(uuid);
-			if(l != null && l > settings.get("limit", 0)){
+			if(l != null && l >= settings.get("limit", 0)){
 				boolean renew = settings.get("renew", 0) > 0;
 				Print.chat(player, renew ? trs("reached_use_limit_wait") : trs("reached_use_limit"));
 				return;
@@ -123,7 +123,7 @@ public class SignData {
 			return;
 		}
 		if(price > 0){
-			Account account = DataManager.getAccount("player:" + event.getEntityPlayer(), false, false);
+			Account account = DataManager.getAccount("player:" + uuid.toString(), false, false);
 			if(account == null || account.getBalance() < price){
 				Print.chat(player, trs("not_enough_money"));
 				return;
