@@ -5,6 +5,7 @@ import static net.fexcraft.mod.pcmds.EditCmd.trs;
 import net.fexcraft.lib.mc.capabilities.sign.SignCapability;
 import net.fexcraft.lib.mc.utils.Formatter;
 import net.fexcraft.lib.mc.utils.Print;
+import net.fexcraft.mod.pcmds.PayableCommandSigns.DimPos;
 import net.fexcraft.mod.pcmds.PayableCommandSigns.EditMode;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
@@ -55,11 +56,14 @@ public class SignCapImpl implements SignCapability.Listener {
 			tile.signText[1] = formattedComponent("&0[&6PcmdS&0]");
 			tile.signText[2] = formattedComponent("&einactive");
 			tile.signText[3] = formattedComponent("&0- - - -");
-			sendUpdate(tile);
 			data = new SignData(tile.signText.length);
+			data.pos = new DimPos(tile);
+			sendUpdate(tile);
 			cap.setActive();
 			return true;
 		}
+		SignData fldt = PayableCommandSigns.FLOATING.get(data.pos);
+		if(fldt != null && data != fldt) data = fldt;
 		if(active){
 			EditMode mode = PayableCommandSigns.SELSIGNS.get(event.getEntityPlayer().getGameProfile().getId());
 			if(mode.set_edit){
