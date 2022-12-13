@@ -8,6 +8,7 @@ import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.util.Date;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Timer;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -19,6 +20,7 @@ import net.fexcraft.lib.mc.capabilities.sign.SignCapability;
 import net.fexcraft.lib.mc.capabilities.sign.SignCapabilitySerializer;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.tileentity.TileEntitySign;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.Capability;
@@ -90,9 +92,9 @@ public class PayableCommandSigns {
 		LocalDateTime midnight = LocalDateTime.of(LocalDate.now(ZoneOffset.systemDefault()), LocalTime.MIDNIGHT);
 		long mid = midnight.toInstant(ZoneOffset.UTC).toEpochMilli();
 		long date = Time.getDate();
-		while((mid += 3600000) < date);
+		while((mid += 60000) < date);
 		if(TIMER == null){
-			(TIMER = new Timer()).schedule(new ScheduledCheck(), new Date(mid), 3600000);
+			(TIMER = new Timer()).schedule(new ScheduledCheck(), new Date(mid), 60000);
 		}
 	}
     
@@ -138,14 +140,21 @@ public class PayableCommandSigns {
 	public static class DimPos {
 		
 		public BlockPos pos;
-		public int dim;
+		public int dim, hash;
 		
 		public DimPos(String str){
 			String[] split = str.split(":");
 			dim = Integer.parseInt(split[0]);
 			pos = BlockPos.fromLong(Long.parseLong(split[1]));
+			hash = Objects.hash(dim, pos.getX(), pos.getY(), pos.getZ());
 		}
 
+		public DimPos(TileEntitySign tile){
+			dim = tile.getWorld().provider.getDimension();
+			pos = tile.getPos();
+		}
+
+		@Override
 		public boolean equals(Object obj){
 			if(obj instanceof DimPos == false) return false;
 			DimPos o = (DimPos)obj;
@@ -155,6 +164,11 @@ public class PayableCommandSigns {
 		@Override
 		public String toString(){
 			return dim + ":" + pos.toLong();
+		}
+		
+		@Override
+		public int hashCode(){
+			return hash;
 		}
 		
 	}
