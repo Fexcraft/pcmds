@@ -69,7 +69,7 @@ public class EditCmd extends CommandBase {
     	SignCapability cap = getCap(sender.getEntityWorld(), mode);
     	SignCapImpl impl = cap == null ? null : cap.getListener(SignCapImpl.class, SignCapImpl.REGNAME);
     	SignData data = impl == null ? null : impl.data;
-		SignData fldt = PayableCommandSigns.FLOATING.get(data.pos);
+		SignData fldt = data == null ? null : PayableCommandSigns.FLOATING.get(data.pos);
 		if(fldt != null && impl != null && data != fldt) data = impl.data = fldt;
 		switch(args[0]){
 		case "editmode":{
