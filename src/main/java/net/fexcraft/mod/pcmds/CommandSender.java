@@ -1,9 +1,11 @@
 package net.fexcraft.mod.pcmds;
 
+import net.fexcraft.lib.mc.utils.Print;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 
@@ -41,5 +43,11 @@ public class CommandSender implements ICommandSender {
 	public Entity getCommandSenderEntity(){
 		return player;
 	}
+
+	@Override
+	public void sendMessage(ITextComponent component){
+		if(player != null) player.sendMessage(component);
+		else Print.log(component.getFormattedText());
+    }
 
 }
