@@ -119,20 +119,33 @@ public class EditCmd extends CommandBase {
             		Print.chat(sender, trs("cmd.status.settings.entry", entry.getKey(), entry.getValue()));
     			}
     		}
+    		if(data.ctext.size() > 0){
+        		Print.chat(sender, trs("cmd.status.text"));
+        		for(Entry<String, String[]> entry : data.ctext.entrySet()){
+            		Print.chat(sender, trs("cmd.status.text.event", entry.getKey()));
+            		String[] text = entry.getValue();
+            		for(int i = 0; i < text.length; i++){
+                		Print.chat(sender, i + " " + trs("cmd.status.text.entry", text[i] == null ? "" : text[i]));
+            		}
+        		}
+    		}
 			return;
 		}
 		case "text":{
-			if(args.length < 3){
+			if(args.length < 4){
 	    		Print.chat(sender, "&a---- --- -- -");
-	    		Print.chat(sender, "/pcmds text <line> <text>");
-	    		Print.chat(sender, "/pcmds text 0 example text");
+	    		Print.chat(sender, "/pcmds text <event> <line> <text>");
+	    		Print.chat(sender, "/pcmds text interact 0 example text");
 				return;
 			}
-			int idx = Integer.parseInt(args[1]);
-			String str = args[2];
-			if(args.length > 3) for(int i = 3; i < args.length; i++) str += " " + args[i];
-			data.text[idx] = str;
-			Print.chat(sender, trs("cmd.text.updated", idx));
+			String event = findEvent(sender, data, args[1]);
+			if(event == null) return;
+			int idx = Integer.parseInt(args[2]);
+			String rest = args[3];
+			if(args.length > 4) for(int i = 4; i < args.length; i++) rest += " " + args[i];
+			if(!data.ctext.containsKey(event)) data.ctext.put(event, new String[data.textlength]);
+			data.ctext.get(event)[idx] = rest;
+			Print.chat(sender, trs("cmd.text.updated", idx, event));
 			cap.getTileEntity().markDirty();
 			return;
 		}
@@ -261,7 +274,7 @@ public class EditCmd extends CommandBase {
 			Transferable trs = cp.getContents(null);
 			if(!trs.isDataFlavorSupported(DataFlavor.stringFlavor)) return;
 			try{
-				data.load(JsonToNBT.getTagFromJson(trs.getTransferData(DataFlavor.stringFlavor).toString()));
+				data.load(null, null, JsonToNBT.getTagFromJson(trs.getTransferData(DataFlavor.stringFlavor).toString()));
 			}
 			catch(Exception e){
 				e.printStackTrace();
@@ -294,13 +307,18 @@ public class EditCmd extends CommandBase {
 			}
 			File file = new File(PayableCommandSigns.CFGPATH, "/" + args[1] + ".nbt");
 			try{
-				data.load(CompressedStreamTools.read(file));
+				data.load(null, null, CompressedStreamTools.read(file));
 			}
 			catch (IOException e){
 				e.printStackTrace();
 			}
 			Print.chat(sender, trs("cmd.load", args[1]));
 			cap.getTileEntity().markDirty();
+			return;
+		}
+		case "noplayer":{
+			data.noplayer = !data.noplayer;
+			Print.chat(sender, trs(data.noplayer ? "cmd.noplayer.on" : "cmd.noplayer.off"));
 			return;
 		}
 		case "help":
@@ -322,6 +340,7 @@ public class EditCmd extends CommandBase {
     		Print.chat(sender, "/pcmds type list");
     		Print.chat(sender, "/pcmds set <setting> <value>");
     		Print.chat(sender, "/pcmds set list");
+    		Print.chat(sender, "/pcmds noplayer");
     		Print.chat(sender, "&2---- --- -- -");
     		Print.chat(sender, "/pcmds save <id>");
     		Print.chat(sender, "/pcmds load <id>");
