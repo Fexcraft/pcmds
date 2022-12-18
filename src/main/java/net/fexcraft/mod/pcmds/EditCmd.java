@@ -335,7 +335,7 @@ public class EditCmd extends CommandBase {
     		Print.chat(sender, "/pcmds add <event> <cmd + args>");
     		Print.chat(sender, "/pcmds remove <event> <index>");
     		Print.chat(sender, "/pcmds clear <event>");
-    		Print.chat(sender, "/pcmds text <line> <text>");
+    		Print.chat(sender, "/pcmds text <event> <line> <text>");
     		Print.chat(sender, "/pcmds type <process-type>");
     		Print.chat(sender, "/pcmds type list");
     		Print.chat(sender, "/pcmds set <setting> <value>");
