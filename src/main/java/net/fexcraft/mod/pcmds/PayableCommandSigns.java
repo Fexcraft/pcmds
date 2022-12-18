@@ -51,7 +51,8 @@ import net.minecraftforge.server.permission.PermissionAPI;
  * @author Ferdinand Calo' (FEX___96)
  *
  */
-@Mod(modid = PayableCommandSigns.MODID, name = PayableCommandSigns.NAME, version = PayableCommandSigns.VERSION)
+@Mod(modid = PayableCommandSigns.MODID, name = PayableCommandSigns.NAME, version = PayableCommandSigns.VERSION,
+	serverSideOnly = true, acceptableRemoteVersions = "*", acceptedMinecraftVersions = "*", dependencies = "required-after:fsmm")
 public class PayableCommandSigns {
 	
     public static final String MODID = "pcmds";
