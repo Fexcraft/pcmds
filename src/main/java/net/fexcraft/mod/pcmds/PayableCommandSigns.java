@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Timer;
@@ -15,6 +16,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.logging.log4j.Logger;
 
+import com.mojang.authlib.GameProfile;
+
 import net.fexcraft.lib.common.math.Time;
 import net.fexcraft.lib.mc.capabilities.sign.SignCapability;
 import net.fexcraft.lib.mc.capabilities.sign.SignCapabilitySerializer;
@@ -22,9 +25,14 @@ import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntitySign;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityInject;
+import net.minecraftforge.common.config.Configuration;
+import net.minecraftforge.common.util.FakePlayer;
+import net.minecraftforge.common.util.FakePlayerFactory;
+import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
@@ -57,14 +65,21 @@ public class PayableCommandSigns {
 	@CapabilityInject(SignCapability.class)
 	public static final Capability<SignCapability> SIGNCAP = null;
 	public static File CFGPATH, ROOTPATH;
+	public static HashMap<Integer, FakePlayer> OP_PLAYER = new HashMap<>();
+	public static UUID OP_PLAYER_ID;
 
     @EventHandler
     public void preInit(FMLPreInitializationEvent event){
         logger = event.getModLog();
 		SignCapabilitySerializer.addListener(SignCapImpl.class);
-		MinecraftForge.EVENT_BUS.register(new PlayerLogInOutHandler());
+		MinecraftForge.EVENT_BUS.register(new SubEventHandler());
 		CFGPATH = new File(ROOTPATH = event.getModConfigurationDirectory(), "/pcmds");
 		if(!CFGPATH.exists()) CFGPATH.mkdirs();
+		Configuration config = new Configuration(ROOTPATH, "pcmds.cfg");
+		boolean enabled = config.getBoolean("use_fakeplayer", "general", false, "Should a fake-player be used to handle commands prefixed with 'o!' ?");
+		if(enabled){
+			OP_PLAYER_ID = UUID.fromString(config.getString("fakeplayer_uuid", "general", "null", "UUID of the fake-player."));
+		}
     }
 
     @EventHandler
@@ -79,7 +94,7 @@ public class PayableCommandSigns {
 		try{
 			NBTTagCompound com = CompressedStreamTools.read(cache);
 			for(String str : com.getKeySet()){
-				FLOATING.put(new DimPos(str), new SignData(4).load(com.getCompoundTag(str)));
+				FLOATING.put(new DimPos(str), new SignData(4).load(null, null, com.getCompoundTag(str)));
 			}
 		}
 		catch(IOException e){
@@ -115,7 +130,7 @@ public class PayableCommandSigns {
 		}
 	}
 	
-	public static class PlayerLogInOutHandler {
+	public static class SubEventHandler {
 		
 		@SubscribeEvent
 		public void onPlayerJoin(PlayerLoggedInEvent event){
@@ -125,6 +140,19 @@ public class PayableCommandSigns {
 		@SubscribeEvent
 		public void onPlayerLeave(PlayerLoggedOutEvent event){
 			SELSIGNS.remove(event.player.getGameProfile().getId());
+		}
+		
+		@SubscribeEvent
+		public void onLoad(WorldEvent.Load event){
+			if(OP_PLAYER_ID == null || event.getWorld().isRemote) return;
+			int dim = event.getWorld().provider.getDimension();
+			OP_PLAYER.put(dim, FakePlayerFactory.get((WorldServer)event.getWorld(), new GameProfile(OP_PLAYER_ID, "PCMDS")));
+		}
+		
+		@SubscribeEvent
+		public void onUnload(WorldEvent.Unload event){
+			if(OP_PLAYER_ID == null || event.getWorld().isRemote) return;
+			OP_PLAYER.remove(event.getWorld().provider.getDimension());
 		}
 		
 	}
