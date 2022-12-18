@@ -1,6 +1,7 @@
 package net.fexcraft.mod.pcmds;
 
 import static net.fexcraft.mod.pcmds.EditCmd.trs;
+import static net.fexcraft.mod.pcmds.PayableCommandSigns.OP_PLAYER;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -8,7 +9,7 @@ import java.util.Map.Entry;
 import java.util.UUID;
 
 import net.fexcraft.lib.common.math.Time;
-import net.fexcraft.lib.mc.capabilities.sign.SignCapability;
+import net.fexcraft.lib.mc.capabilities.FCLCapabilities;
 import net.fexcraft.lib.mc.utils.Print;
 import net.fexcraft.lib.mc.utils.Static;
 import net.fexcraft.mod.fsmm.api.Account;
@@ -32,26 +33,29 @@ import net.minecraftforge.event.entity.player.PlayerInteractEvent;
  */
 public class SignData {
 	
-	public String[] text;
+	public static final int MINUTE = 60000;
+	public HashMap<String, String[]> ctext = new HashMap<>();
 	public Type type = Type.BASIC;
 	public HashMap<String, ArrayList<String>> events = new HashMap<>();
 	public Settings settings = new Settings();
 	public long price = 10000;
+	public boolean noplayer;
 	public DimPos pos;
 	//
-	public long refresh = 0;
-	public int timer = 0;
+	public long refresh = 0, cooldown = 0;
+	public int timer = 0, textlength;
 	public HashMap<UUID, Integer> uses = new HashMap<>();
 	
 	public SignData(int length){
-		text = new String[length];
+		textlength = length;
 	}
 
-	public SignData load(NBTTagCompound com){
+	public SignData load(SignCapImpl cap, TileEntitySign tile, NBTTagCompound com){
 		if(com.hasKey("type")) type = Type.valueOf(com.getString("type"));
 		price = com.getLong("fee");
 		settings.clear();
 		events.clear();
+		ctext.clear();
 		uses.clear();
 		for(String str : type.settings){
 			if(com.hasKey("set:" + str)) settings.put(str, com.getInteger("set:" + str));
@@ -66,10 +70,20 @@ public class SignData {
 				events.put(event, alist);
 			}
 		}
+		for(String event : type.cmd_events){
+			if(!com.hasKey("text:" + event)) continue;
+			NBTTagCompound texts = com.getCompoundTag("text:" + event);
+			if(!ctext.containsKey(event)) ctext.put(event, new String[textlength]);
+			String[] txts = ctext.get(event);
+			for(int i = 0; i < textlength; i++){
+				String str = texts.getString("l" + i);
+				txts[i] = str.length() == 0 ? null : str;
+			}
+		}
 		if(com.hasKey("pos")) pos = new DimPos(com.getString("pos"));
 		if(com.hasKey("refresh")){
 			refresh = com.getLong("refresh");
-			timer = (int)((refresh - Time.getDate()) / 60000);
+			timer = (int)((refresh - Time.getDate()) / MINUTE);
 			if(timer < 0) setupTimer(true);
 		}
 		if(com.hasKey("uses")){
@@ -77,6 +91,21 @@ public class SignData {
 			for(String str : use.getKeySet()){
 				uses.put(UUID.fromString(str), use.getInteger(str));
 			}
+		}
+		if(com.hasKey("cooldown")) cooldown = com.getLong("cooldown");
+		if(com.hasKey("noplayer")) noplayer = com.getBoolean("noplayer");
+		if(cap == null || tile == null) return this;
+		try{
+			String[] text = this.ctext.get(type == Type.RENT && uses.isEmpty() ? type.cmd_events[1] : type.cmd_events[0]);
+			if(text != null){
+				for(int i = 0; i < text.length; i++){
+					if(i >= tile.signText.length) break;
+					tile.signText[i] = SignCapImpl.formattedComponent(text[i]);
+				}
+			}
+		}
+		catch(Exception e){
+			e.printStackTrace();
 		}
 		return this;
 	}
@@ -92,8 +121,14 @@ public class SignData {
 			for(String str : cmds.getValue()) list.appendTag(new NBTTagString(str));
 			com.setTag("event:" + cmds.getKey(), list);
 		}
-		for(int i = 0; i < text.length; i++){
-			if(text[i] != null && text[i].length() > 0) com.setString("text:" + i, text[i]);
+		for(Entry<String, String[]> entry : ctext.entrySet()){
+			NBTTagCompound texts = new NBTTagCompound();
+			String[] txts = entry.getValue();
+			for(int i = 0; i < textlength; i++){
+				if(i >= txts.length) break;
+				if(txts[i] != null && txts[i].length() > 0) texts.setString("l" + i, txts[i]);
+			}
+			com.setTag("text:" + entry.getKey(), texts);
 		}
 		if(pos != null) com.setString("pos", pos.toString());
 		if(refresh > 0) com.setLong("refresh", refresh);
@@ -104,10 +139,12 @@ public class SignData {
 			}
 			com.setTag("uses", use);
 		}
+		if(cooldown > 0) com.setLong("cooldown", cooldown);
+		com.setBoolean("noplayer", noplayer);
 		return com;
 	}
 
-	public void process(SignCapability cap, PlayerInteractEvent event, IBlockState state, TileEntitySign tile){
+	public void process(SignCapImpl cap, PlayerInteractEvent event, IBlockState state, TileEntitySign tile){
 		EntityPlayer player = event.getEntityPlayer();
 		UUID uuid = player.getGameProfile().getId();
 		if(type == Type.BASIC && settings.get("limit", 0) > 0){
@@ -118,9 +155,15 @@ public class SignData {
 				return;
 			}
 		}
-		if(type == Type.RENT && uses.size() > 0){
-			Print.chat(player, trs("sign_already_rented", timer));
-			return;
+		if(type == Type.RENT){
+			if(uses.size() > 0){
+				Print.chat(player, trs("sign_already_rented", timer + settings.get("cooldown", 0)));
+				return;
+			}
+			else if(cooldown > 0 && Time.getDate() < cooldown){
+				Print.chat(player, trs("sign_in_cooldown", (cooldown - Time.getDate()) / MINUTE));
+				return;
+			}
 		}
 		if(price > 0){
 			Account account = DataManager.getAccount("player:" + uuid.toString(), false, false);
@@ -136,8 +179,10 @@ public class SignData {
 		for(String cmd : cmds){
 			cmd = format(cmd, tile, state, player, uuid);
 			if(cmd.startsWith("p!")) cmdman.executeCommand(player, cmd.substring(2));
-			else cmdman.executeCommand(new CommandSender(event.getWorld(), event.getEntityPlayer()), format(cmd, tile, state, player, uuid));
+			else if(cmd.startsWith("o!")) cmdman.executeCommand(OP_PLAYER.get(pos.dim), cmd.substring(2));
+			else cmdman.executeCommand(new CommandSender(event.getWorld(), noplayer ? null : event.getEntityPlayer()), format(cmd, tile, state, player, uuid));
 		}
+		cooldown = 0;
 		if(type == Type.BASIC && settings.get("limit", 0) > 0){
 			Integer i = uses.get(uuid);
 			uses.put(uuid, i == null ? 1 : i + 1);
@@ -146,6 +191,15 @@ public class SignData {
 		else if(type == Type.RENT){
 			uses.put(uuid, -1);
 			setupTimer(false);
+		}
+		String[] text = ctext.get(type.cmd_events[0]);
+		if(text != null){
+			for(int i = 0; i < text.length; i++){
+				if(i >= tile.signText.length) break;
+				tile.signText[i] = SignCapImpl.formattedComponent(text[i]);
+			}
+			cap.sendUpdate(tile);
+			tile.markDirty();
 		}
 	}
 
@@ -188,13 +242,17 @@ public class SignData {
 				return new String[]{ "fee", "limit", "renew" };
 			}
 			if(sidx == 1){
-				return new String[]{ "fee", "duration" };
+				return new String[]{ "fee", "duration", "cooldown" };
 			}
 			return new String[]{ "fee" };
 		}
 
 		private String durtag(){
 			return this == BASIC ? settings[2] : settings[1];
+		}
+
+		public String initialtext(){
+			return this == BASIC ? cmd_events[0] : cmd_events[1];
 		}
 		
 	}
@@ -209,6 +267,7 @@ public class SignData {
 	}
 
 	public boolean notext(){
+		String[] text = ctext.get(type.initialtext());
 		if(text == null || text.length == 0) return true;
 		for(String str : text) if(str != null && str.length() > 0) return false;
 		return true;
@@ -216,28 +275,43 @@ public class SignData {
 	
 	public void setupTimer(boolean min){
 		if(min){
-			refresh = Time.getDate() + 60000;
+			refresh = Time.getDate() + MINUTE;
 			timer = 1;
 		}
 		else{
-			refresh = Time.getDate() + (settings.get(type.durtag(), 1) * 60000);
-			timer = (int)((refresh - Time.getDate()) / 60000);
+			refresh = Time.getDate() + (settings.get(type.durtag(), 1) * MINUTE);
+			timer = (int)((refresh - Time.getDate()) / MINUTE);
 			if(timer < 1) timer = 1;
 		}
 		if(!PayableCommandSigns.FLOATING.containsKey(pos)) PayableCommandSigns.FLOATING.put(pos, this);
 	}
 
 	public void processTimed(){
+		refresh = 0;
 		if(type == Type.RENT){
 			UUID uuid = uses.size() == 0 ? null : uses.keySet().toArray(new UUID[0])[0];
 			if(uuid == null) return;
-			ICommandManager cmdman = Static.getServer().commandManager;
+			ICommandManager cmdman = Static.getServer().getCommandManager();
 			ArrayList<String> cmds = events.get(type.cmd_events[1]);
 			if(cmds == null || cmds.isEmpty()) return;
 			World world = Static.getServer().getWorld(pos.dim);
 			for(String cmd : cmds){
 				cmd = format(cmd, null, null, null, uuid);
 				cmdman.executeCommand(new CommandSender(world, null), format(cmd, null, null, null, uuid));
+			}
+			int cld = settings.get("cooldown", 0);
+			if(cld > 0) cooldown = Time.getDate() + (cld * MINUTE);
+			if(ctext.containsKey("start")){
+				TileEntitySign tile = (TileEntitySign)world.getTileEntity(pos.pos);
+				if(tile != null){
+					String[] text = ctext.get(type.cmd_events[1]);
+					for(int i = 0; i < text.length; i++){
+						if(i >= tile.signText.length) break;
+						tile.signText[i] = SignCapImpl.formattedComponent(text[i]);
+					}
+					tile.getCapability(FCLCapabilities.SIGN_CAPABILITY, null).getListener(SignCapImpl.class, SignCapImpl.REGNAME).sendUpdate(tile);
+					tile.markDirty();
+				}
 			}
 		}
 		uses.clear();
