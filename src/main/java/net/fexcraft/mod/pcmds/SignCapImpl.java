@@ -77,7 +77,7 @@ public class SignCapImpl implements SignCapability.Listener {
 				Print.chat(event.getEntityPlayer(), trs("sign_deactivated"));
 				Print.chat(event.getEntityPlayer(), trs("sign_selected"));
 			}
-			else data.process(cap, event, state, tile);
+			else data.process(this, event, state, tile);
 			return true;
 		}
 		else if(hasPerm(event.getEntityPlayer())){
@@ -89,7 +89,7 @@ public class SignCapImpl implements SignCapability.Listener {
 		else return false;
 	}
 
-	private ITextComponent formattedComponent(String string){
+	public static ITextComponent formattedComponent(String string){
 		return new TextComponentString(Formatter.format(string));
 	}
 
@@ -98,7 +98,7 @@ public class SignCapImpl implements SignCapability.Listener {
 	}
 
 	@Override
-	public NBTBase writeToNBT(Capability<SignCapability> capability, EnumFacing side){
+	public NBTBase writeToNBT(Capability<SignCapability> capability, SignCapability instance, EnumFacing side){
 		NBTTagCompound com = new NBTTagCompound();
 		com.setBoolean("sign:active", active);
 		if(data == null) return com;
@@ -107,14 +107,14 @@ public class SignCapImpl implements SignCapability.Listener {
 	}
 
 	@Override
-	public void readNBT(Capability<SignCapability> capability, EnumFacing side, NBTBase nbt){
+	public void readNBT(Capability<SignCapability> capability, SignCapability instance, EnumFacing side, NBTBase nbt){
 		if(nbt == null || !(nbt instanceof NBTTagCompound)){
 			data = null;
 			return;
 		}
 		NBTTagCompound com = (NBTTagCompound)nbt;
 		if(com.hasKey("sign:data")){
-			data = new SignData(4).load(com.getCompoundTag("sign:data"));
+			data = new SignData(4).load(this, instance.getTileEntity(), com.getCompoundTag("sign:data"));
 		}
 		active = com.getBoolean("sign:active");
 	}
@@ -128,9 +128,10 @@ public class SignCapImpl implements SignCapability.Listener {
 			sign.signText[3] = formattedComponent("&0- - - -");
 		}
 		else{
-			for(int i = 0; i < data.text.length; i++){
+			String[] text = data.ctext.get(data.type.initialtext());
+			for(int i = 0; i < text.length; i++){
 				if(i >= sign.signText.length) break;
-				sign.signText[i] = formattedComponent(data.text[i]);
+				sign.signText[i] = formattedComponent(text[i]);
 			}
 		}
 		sendUpdate(sign);
