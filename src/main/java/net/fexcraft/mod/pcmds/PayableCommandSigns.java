@@ -76,11 +76,12 @@ public class PayableCommandSigns {
 		MinecraftForge.EVENT_BUS.register(new SubEventHandler());
 		CFGPATH = new File(ROOTPATH = event.getModConfigurationDirectory(), "/pcmds");
 		if(!CFGPATH.exists()) CFGPATH.mkdirs();
-		Configuration config = new Configuration(ROOTPATH, "pcmds.cfg");
+		Configuration config = new Configuration(event.getSuggestedConfigurationFile());
+		config.load();
 		boolean enabled = config.getBoolean("use_fakeplayer", "general", false, "Should a fake-player be used to handle commands prefixed with 'o!' ?");
-		if(enabled){
-			OP_PLAYER_ID = UUID.fromString(config.getString("fakeplayer_uuid", "general", "null", "UUID of the fake-player."));
-		}
+		String string = config.getString("fakeplayer_uuid", "general", "null", "UUID of the fake-player.");
+		if(enabled) OP_PLAYER_ID = UUID.fromString(string);
+		config.save();
     }
 
     @EventHandler
