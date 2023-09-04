@@ -297,7 +297,8 @@ public class SignData {
 			World world = Static.getServer().getWorld(pos.dim);
 			for(String cmd : cmds){
 				cmd = format(cmd, null, null, null, uuid);
-				cmdman.executeCommand(new CommandSender(world, null), format(cmd, null, null, null, uuid));
+				if(cmd.startsWith("o!")) cmdman.executeCommand(OP_PLAYER.get(pos.dim), cmd.substring(2));
+				else cmdman.executeCommand(new CommandSender(world, null), format(cmd, null, null, null, uuid));
 			}
 			int cld = settings.get("cooldown", 0);
 			if(cld > 0) cooldown = Time.getDate() + (cld * MINUTE);
