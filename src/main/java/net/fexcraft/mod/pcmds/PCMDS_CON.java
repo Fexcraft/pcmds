@@ -2,6 +2,7 @@ package net.fexcraft.mod.pcmds;
 
 import net.fexcraft.lib.mc.capabilities.FCLCapabilities;
 import net.fexcraft.lib.mc.gui.GenericContainer;
+import net.fexcraft.lib.mc.utils.Static;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntitySign;
@@ -16,6 +17,7 @@ public class PCMDS_CON extends GenericContainer {
 	public PCMDS_UI gui;
 	protected SignData data;
 	protected TileEntitySign sign;
+	protected String opname = "";
 
 	public PCMDS_CON(EntityPlayer entity, int x, int y, int z){
 		super(entity);
@@ -36,9 +38,12 @@ public class PCMDS_CON extends GenericContainer {
 			}
 		}
 		else{
+			if(packet.hasKey("opname")){
+				opname = packet.getString("opname");
+			}
 			if(packet.hasKey("signdata")){
 				data = new SignData(sign.signText.length).load(null, null, packet.getCompoundTag("signdata"));
-				gui.update();
+				gui.update(true);
 			}
 		}
 	}
@@ -46,6 +51,12 @@ public class PCMDS_CON extends GenericContainer {
 	private void sendSync(){
 		NBTTagCompound sync = new NBTTagCompound();
 		sync.setTag("signdata", data.save(new NBTTagCompound()));
+		try{
+			sync.setString("opname", PayableCommandSigns.OP_PLAYER_ID == null ? "" : Static.getServer().getPlayerProfileCache().getProfileByUUID(PayableCommandSigns.OP_PLAYER_ID).toString());
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
 		send(Side.CLIENT, sync);
 	}
 
