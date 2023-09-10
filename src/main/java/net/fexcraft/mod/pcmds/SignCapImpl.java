@@ -60,6 +60,7 @@ public class SignCapImpl implements SignCapability.Listener {
 			data.pos = new DimPos(tile);
 			sendUpdate(tile);
 			cap.setActive();
+			event.getEntityPlayer().openGui(PayableCommandSigns.INSTANCE, 0, event.getWorld(), tile.getPos().getX(), tile.getPos().getY(), tile.getPos().getZ());
 			return true;
 		}
 		SignData fldt = PayableCommandSigns.FLOATING.get(data.pos);
@@ -76,6 +77,7 @@ public class SignCapImpl implements SignCapability.Listener {
 				sendUpdate(tile);
 				Print.chat(event.getEntityPlayer(), trs("sign_deactivated"));
 				Print.chat(event.getEntityPlayer(), trs("sign_selected"));
+				event.getEntityPlayer().openGui(PayableCommandSigns.INSTANCE, 0, event.getWorld(), tile.getPos().getX(), tile.getPos().getY(), tile.getPos().getZ());
 			}
 			else data.process(this, event, state, tile);
 			return true;
@@ -84,6 +86,7 @@ public class SignCapImpl implements SignCapability.Listener {
 			EditMode mode = PayableCommandSigns.SELSIGNS.get(event.getEntityPlayer().getGameProfile().getId());
 			mode.pos = tile.getPos();
 			Print.chat(event.getEntityPlayer(), trs("sign_selected"));
+			event.getEntityPlayer().openGui(PayableCommandSigns.INSTANCE, 0, event.getWorld(), tile.getPos().getX(), tile.getPos().getY(), tile.getPos().getZ());
 			return true;
 		}
 		else return false;
