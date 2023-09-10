@@ -36,6 +36,7 @@ public class SignData {
 	public static final int MINUTE = 60000;
 	public HashMap<String, String[]> ctext = new HashMap<>();
 	public Type type = Type.BASIC;
+	public Executor exec = Executor.SERVER;
 	public HashMap<String, ArrayList<String>> events = new HashMap<>();
 	public Settings settings = new Settings();
 	public long price = 10000;
@@ -255,6 +256,12 @@ public class SignData {
 			return this == BASIC ? cmd_events[0] : cmd_events[1];
 		}
 		
+	}
+
+	public static enum Executor {
+
+		SERVER, PLAYER, OPERATOR;
+
 	}
 	
 	public static class Settings extends HashMap<String, Integer> {
