@@ -14,6 +14,7 @@ import java.util.Timer;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import net.minecraftforge.fml.common.network.NetworkRegistry;
 import org.apache.logging.log4j.Logger;
 
 import com.mojang.authlib.GameProfile;
@@ -68,6 +69,8 @@ public class PayableCommandSigns {
 	public static File CFGPATH, ROOTPATH;
 	public static HashMap<Integer, FakePlayer> OP_PLAYER = new HashMap<>();
 	public static UUID OP_PLAYER_ID;
+	@Mod.Instance(MODID)
+	public static PayableCommandSigns INSTANCE;
 
     @EventHandler
     public void preInit(FMLPreInitializationEvent event){
@@ -87,6 +90,7 @@ public class PayableCommandSigns {
     @EventHandler
     public void init(FMLInitializationEvent event){
 		PermissionAPI.registerNode(EDIT_SIGN_PERM, DefaultPermissionLevel.OP, "Permission to edit [PCMDS] Sings");
+		NetworkRegistry.INSTANCE.registerGuiHandler(this, new GuiHandler());
     }
     
 	@EventHandler
