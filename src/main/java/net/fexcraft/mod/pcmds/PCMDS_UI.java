@@ -16,6 +16,7 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 	private static final ResourceLocation TEXTURE = new ResourceLocation("pcmds:textures/gui/main.png");
 	private static ArrayList<String> info = new ArrayList<>();
 	private boolean edittext0 = true;
+	private int currcom;
 
 	public PCMDS_UI(EntityPlayer player, int x, int y, int z){
 		super(TEXTURE, new PCMDS_CON(player, x, y, z), player);
@@ -112,6 +113,30 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 			fields.put("text" + i, new TextField(2 + i, fontRenderer, guiLeft + 7, guiTop + 103 + i * 14, 242, 10).setMaxLength(64));
 		}
 		//
+		texts.put("commands", new BasicText(guiLeft + 8, guiTop + 164, 68, celor, "Commands:"));
+		texts.put("cmd_event_0", new BasicText(guiLeft + 106, guiTop + 164, 68, color, "event0"));
+		texts.put("cmd_event_1", new BasicText(guiLeft + 180, guiTop + 164, 68, color, "event1"));
+		buttons.put("cmd_event_0", new BasicButton("c0", guiLeft + 104, guiTop + 162, 182, 242, 72, 12, true){
+			@Override
+			public boolean onclick(int mx, int my, int mb){
+				savetext();
+				edittext0 = true;
+				update(false);
+				return true;
+			}
+		});
+		buttons.put("cmd_event_1", new BasicButton("c1", guiLeft + 178, guiTop + 162, 182, 242, 72, 12, true){
+			@Override
+			public boolean onclick(int mx, int my, int mb){
+				savetext();
+				edittext0 = false;
+				update(false);
+				return true;
+			}
+		});
+		fields.put("command", new TextField(6, fontRenderer, guiLeft + 7, guiTop + 177, 242, 10).setMaxLength(1024));
+		texts.put("status", new BasicText(guiLeft + 8, guiTop + 192, 152, color, "status").hoverable(true).autoscale());
+		//
 		container.gui = this;
 		NBTTagCompound com = new NBTTagCompound();
 		com.setBoolean("sync", true);
@@ -186,8 +211,8 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 			texts.get("operator").visible = false;
 		}
 		if(container.data.type == Type.BASIC){
-			texts.get("text_event_0").string = Type.BASIC.cmd_events[0];
-			texts.get("text_event_1").string = "-";
+			texts.get("text_event_0").string = texts.get("cmd_event_0").string = Type.BASIC.cmd_events[0];
+			texts.get("text_event_1").string = texts.get("cmd_event_1").string = "-";
 			button = buttons.get("text_event_0");
 			button.enabled = true;
 			button.tx = 34;
@@ -198,10 +223,16 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 			for(int i = 0; i < 4; i++){
 				fields.get("text" + i).setText(text == null || text[i] == null? "" : text[i]);
 			}
+			button = buttons.get("cmd_event_0");
+			button.enabled = true;
+			button.tx = 34;
+			button = buttons.get("cmd_event_1");
+			button.enabled = false;
+			button.tx = 182;
 		}
 		else{
-			texts.get("text_event_0").string = Type.RENT.cmd_events[0];
-			texts.get("text_event_1").string = Type.RENT.cmd_events[1];
+			texts.get("text_event_0").string = texts.get("cmd_event_0").string = Type.RENT.cmd_events[0];
+			texts.get("text_event_1").string = texts.get("cmd_event_1").string = Type.RENT.cmd_events[1];
 			buttons.get("text_event_1").enabled = true;
 			button = buttons.get("text_event_0");
 			button.enabled = true;
@@ -213,7 +244,18 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 			for(int i = 0; i < 4; i++){
 				fields.get("text" + i).setText(text == null || text[i] == null? "" : text[i]);
 			}
+			button = buttons.get("cmd_event_0");
+			button.enabled = true;
+			button.tx = edittext0 ? 34 : 108;
+			button = buttons.get("cmd_event_1");
+			button.enabled = true;
+			button.tx = edittext0 ? 108 : 34;
 		}
+		String event = container.data.type == Type.BASIC ? Type.BASIC.cmd_events[0] : Type.RENT.cmd_events[edittext0 ? 0 : 1];
+		int am = container.data.events.containsKey(event) ? container.data.events.get(event).size() : 0;
+		if(currcom > 0 && am > 0 && currcom >= container.data.events.get(event).size()) currcom = 0;
+		texts.get("status").string = "Command: " + (currcom  + 1) + " of " + am + "; Event: " + event;
+		fields.get("command").setText(am == 0 ? "" : container.data.events.get(event).get(currcom));
 	}
 
 	public void savetext(){
