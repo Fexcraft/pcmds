@@ -1,8 +1,13 @@
 package net.fexcraft.mod.pcmds;
 
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
+import java.util.Locale;
 
 import net.fexcraft.lib.mc.gui.GenericGui;
+import net.fexcraft.lib.mc.utils.Print;
 import net.fexcraft.mod.fsmm.util.Config;
 import net.fexcraft.mod.pcmds.SignData.Executor;
 import net.fexcraft.mod.pcmds.SignData.Type;
@@ -198,6 +203,7 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 		buttons.put("save", new BasicButton("save", guiLeft + 224, guiTop + 190, 224, 190, 12, 12, true){
 			@Override
 			public boolean onclick(int mx, int my, int mb){
+				container.data.price = parsefee();
 				savecmd();
 				savetext();
 				NBTTagCompound com = new NBTTagCompound();
@@ -213,6 +219,7 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 		buttons.put("act", new BasicButton("act", guiLeft + 238, guiTop + 190, 238, 190, 12, 12, true){
 			@Override
 			public boolean onclick(int mx, int my, int mb){
+				container.data.price = parsefee();
 				savecmd();
 				savetext();
 				NBTTagCompound com = new NBTTagCompound();
@@ -371,6 +378,23 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 		String event = container.data.type == Type.BASIC ? Type.BASIC.cmd_events[0] : Type.RENT.cmd_events[edittext0 ? 0 : 1];
 		if(!container.data.events.containsKey(event)) return;
 		container.data.events.get(event).set(currcom, fields.get("command").getText());
+	}
+
+	private static final DecimalFormat df = new DecimalFormat("#.000", new DecimalFormatSymbols(Locale.US));
+	static { df.setRoundingMode(RoundingMode.DOWN); }
+
+	public long parsefee(){
+		try{
+			String str = fields.get("fee").getText().replace(Config.getDot(), "").replace(",", ".");
+			if(str.length() == 0) return 0;
+			String format = df.format(Double.parseDouble(str));
+			return Long.parseLong(format.replace(",", "").replace(".", ""));
+		}
+		catch(Exception e){
+			Print.chat(player, EditCmd.trs("fee_invalid"));
+			e.printStackTrace();
+			return container.data.price;
+		}
 	}
 
 	@Override
