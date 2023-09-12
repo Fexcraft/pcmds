@@ -15,6 +15,7 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 
 	private static final ResourceLocation TEXTURE = new ResourceLocation("pcmds:textures/gui/main.png");
 	private static ArrayList<String> info = new ArrayList<>();
+	private boolean edittext0 = true;
 
 	public PCMDS_UI(EntityPlayer player, int x, int y, int z){
 		super(TEXTURE, new PCMDS_CON(player, x, y, z), player);
@@ -25,6 +26,7 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 	@Override
 	public void init(){
 		int color = 0xdedede;
+		int celor = 0x5d5d5d;
 		texts.put("fee", new BasicText(guiLeft + 8, guiTop + 8, 68, color, "Use Fee:"));
 		fields.put("fee", new NumberField(0, fontRenderer, guiLeft + 80, guiTop + 6, 170, 12));
 		texts.put("type", new BasicText(guiLeft + 8, guiTop + 26, 68, color, "Type:"));
@@ -84,6 +86,31 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 		texts.put("exe_operator", new BasicText(guiLeft + 198, guiTop + 58, 50, color, "Operator"));
 		texts.put("operator", new BasicText(guiLeft + 8, guiTop + 72, 68, color, "Name/UUID"));
 		fields.put("operator", new TextField(1, fontRenderer, guiLeft + 80, guiTop + 70, 170, 12));
+		//
+		texts.put("signtext", new BasicText(guiLeft + 8, guiTop + 90, 68, celor, "Sign Text:"));
+		texts.put("text_event_0", new BasicText(guiLeft + 106, guiTop + 90, 68, color, "event0"));
+		texts.put("text_event_1", new BasicText(guiLeft + 180, guiTop + 90, 68, color, "event1"));
+		buttons.put("text_event_0", new BasicButton("e0", guiLeft + 104, guiTop + 88, 182, 242, 72, 12, true){
+			@Override
+			public boolean onclick(int mx, int my, int mb){
+				savetext();
+				edittext0 = true;
+				update(false);
+				return true;
+			}
+		});
+		buttons.put("text_event_1", new BasicButton("e1", guiLeft + 178, guiTop + 88, 182, 242, 72, 12, true){
+			@Override
+			public boolean onclick(int mx, int my, int mb){
+				savetext();
+				edittext0 = false;
+				update(false);
+				return true;
+			}
+		});
+		for(int i = 0; i < 4; i++){
+			fields.put("text" + i, new TextField(2 + i, fontRenderer, guiLeft + 7, guiTop + 103 + i * 14, 242, 10).setMaxLength(64));
+		}
 		//
 		container.gui = this;
 		NBTTagCompound com = new NBTTagCompound();
@@ -157,6 +184,55 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 			}
 			fields.get("operator").setVisible(false);
 			texts.get("operator").visible = false;
+		}
+		if(container.data.type == Type.BASIC){
+			texts.get("text_event_0").string = Type.BASIC.cmd_events[0];
+			texts.get("text_event_1").string = "-";
+			button = buttons.get("text_event_0");
+			button.enabled = true;
+			button.tx = 34;
+			button = buttons.get("text_event_1");
+			button.enabled = false;
+			button.tx = 182;
+			String[] text = container.data.ctext.get(Type.BASIC.cmd_events[0]);
+			for(int i = 0; i < 4; i++){
+				fields.get("text" + i).setText(text == null || text[i] == null? "" : text[i]);
+			}
+		}
+		else{
+			texts.get("text_event_0").string = Type.RENT.cmd_events[0];
+			texts.get("text_event_1").string = Type.RENT.cmd_events[1];
+			buttons.get("text_event_1").enabled = true;
+			button = buttons.get("text_event_0");
+			button.enabled = true;
+			button.tx = edittext0 ? 34 : 108;
+			button = buttons.get("text_event_1");
+			button.enabled = true;
+			button.tx = edittext0 ? 108 : 34;
+			String[] text = container.data.ctext.get(Type.RENT.cmd_events[edittext0 ? 0 : 1]);
+			for(int i = 0; i < 4; i++){
+				fields.get("text" + i).setText(text == null || text[i] == null? "" : text[i]);
+			}
+		}
+	}
+
+	public void savetext(){
+		String entry = container.data.type == Type.BASIC ? Type.BASIC.cmd_events[0] : Type.RENT.cmd_events[edittext0 ? 0 : 1];
+		String[] text = container.data.ctext.get(entry);
+		for(int i = 0; i < 4; i++){
+			String str = fields.get("text" + i).getText();
+			if(str.length() <= 0) continue;
+			if(text == null) text = new String[container.sign.signText.length];
+			text[i] = str;
+		}
+		boolean empty = true;
+		if(text != null){
+			for(int i = 0; i < text.length ; i++){
+				if(text[i] != null && text[i].length() > 0) empty = false;
+			}
+		}
+		if(text != null && !empty){
+			container.data.ctext.put(entry, text);
 		}
 	}
 
