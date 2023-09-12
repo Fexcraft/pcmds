@@ -51,11 +51,11 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 		texts.put("type_rent", new BasicText(guiLeft + 84, guiTop + 40, 74, color, "Rent/Timed"));
 		//
 		buttons.put("time_days", new BasicButton("days", guiLeft + 162, guiTop + 38, 162, 38, 28, 12, true));
-		texts.put("time_days", new BasicText(guiLeft + 164, guiTop + 40, 76, color, "-d").autoscale().hoverable(true));
+		texts.put("time_days", new BasicText(guiLeft + 164, guiTop + 40, 24, color, "-d").autoscale().hoverable(true));
 		buttons.put("time_hours", new BasicButton("hours", guiLeft + 192, guiTop + 38, 192, 38, 28, 12, true));
-		texts.put("time_hours", new BasicText(guiLeft + 194, guiTop + 40, 76, color, "-h").autoscale().hoverable(true));
+		texts.put("time_hours", new BasicText(guiLeft + 194, guiTop + 40, 24, color, "-h").autoscale().hoverable(true));
 		buttons.put("time_mins", new BasicButton("mins", guiLeft + 222, guiTop + 38, 222, 38, 28, 12, true));
-		texts.put("time_mins", new BasicText(guiLeft + 224, guiTop + 40, 76, color, "-m").autoscale().hoverable(true));
+		texts.put("time_mins", new BasicText(guiLeft + 224, guiTop + 40, 24, color, "-m").autoscale().hoverable(true));
 		//
 		texts.put("executor", new BasicText(guiLeft + 8, guiTop + 58, 68, color, "Executor:"));
 		buttons.put("exe_server", new BasicButton("server", guiLeft + 80, guiTop + 56, 80, 56, 54, 12, true){
@@ -136,6 +136,95 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 		});
 		fields.put("command", new TextField(6, fontRenderer, guiLeft + 7, guiTop + 177, 242, 10).setMaxLength(1024));
 		texts.put("status", new BasicText(guiLeft + 8, guiTop + 192, 152, color, "status").hoverable(true).autoscale());
+		//
+		buttons.put("cmd_add", new BasicButton("ca", guiLeft + 164, guiTop + 190, 164, 190, 12, 12, true){
+			@Override
+			public boolean onclick(int mx, int my, int mb){
+				savecmd();
+				String event = container.data.type == Type.BASIC ? Type.BASIC.cmd_events[0] : Type.RENT.cmd_events[edittext0 ? 0 : 1];
+				if(!container.data.events.containsKey(event)){
+					container.data.events.put(event, new ArrayList<>());
+				}
+				container.data.events.get(event).add("");
+				currcom = container.data.events.get(event).size() - 1;
+				update(false);
+				return true;
+			}
+		});
+		buttons.put("cmd_rem", new BasicButton("cr", guiLeft + 178, guiTop + 190, 178, 190, 12, 12, true){
+			@Override
+			public boolean onclick(int mx, int my, int mb){
+				String event = container.data.type == Type.BASIC ? Type.BASIC.cmd_events[0] : Type.RENT.cmd_events[edittext0 ? 0 : 1];
+				if(!container.data.events.containsKey(event)) return true;
+				container.data.events.get(event).remove(currcom);
+				if(currcom >= container.data.events.get(event).size()) currcom = container.data.events.get(event).size() - 1;
+				if(currcom < 0) currcom = 0;
+				update(false);
+				return true;
+			}
+		});
+		buttons.put("cmd_prev", new BasicButton("cp", guiLeft + 192, guiTop + 190, 192, 190, 12, 12, true){
+			@Override
+			public boolean onclick(int mx, int my, int mb){
+				savecmd();
+				String event = container.data.type == Type.BASIC ? Type.BASIC.cmd_events[0] : Type.RENT.cmd_events[edittext0 ? 0 : 1];
+				if(!container.data.events.containsKey(event)){
+					currcom = 0;
+				}
+				else{
+					currcom--;
+					if(currcom < 0) currcom = container.data.events.get(event).size() - 1;
+				}
+				update(false);
+				return true;
+			}
+		});
+		buttons.put("cmd_next", new BasicButton("cn", guiLeft + 206, guiTop + 190, 206, 190, 12, 12, true){
+			@Override
+			public boolean onclick(int mx, int my, int mb){
+				savecmd();
+				String event = container.data.type == Type.BASIC ? Type.BASIC.cmd_events[0] : Type.RENT.cmd_events[edittext0 ? 0 : 1];
+				if(!container.data.events.containsKey(event)){
+					currcom = 0;
+				}
+				else{
+					currcom++;
+					if(currcom >= container.data.events.get(event).size()) currcom = 0;
+				}
+				update(false);
+				return true;
+			}
+		});
+		buttons.put("save", new BasicButton("save", guiLeft + 224, guiTop + 190, 224, 190, 12, 12, true){
+			@Override
+			public boolean onclick(int mx, int my, int mb){
+				savecmd();
+				savetext();
+				NBTTagCompound com = new NBTTagCompound();
+				com.setTag("update", container.data.save(new NBTTagCompound()));
+				com.setBoolean("activate", false);
+				if(container.data.exec == Executor.OPERATOR){
+					com.setString("exec", fields.get("operator").getText());
+				}
+				container.send(Side.SERVER, com);
+				return true;
+			}
+		});
+		buttons.put("act", new BasicButton("act", guiLeft + 238, guiTop + 190, 238, 190, 12, 12, true){
+			@Override
+			public boolean onclick(int mx, int my, int mb){
+				savecmd();
+				savetext();
+				NBTTagCompound com = new NBTTagCompound();
+				com.setTag("update", container.data.save(new NBTTagCompound()));
+				com.setBoolean("activate", true);
+				if(container.data.exec == Executor.OPERATOR){
+					com.setString("exec", fields.get("operator").getText());
+				}
+				container.send(Side.SERVER, com);
+				return true;
+			}
+		});
 		//
 		container.gui = this;
 		NBTTagCompound com = new NBTTagCompound();
@@ -254,7 +343,7 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 		String event = container.data.type == Type.BASIC ? Type.BASIC.cmd_events[0] : Type.RENT.cmd_events[edittext0 ? 0 : 1];
 		int am = container.data.events.containsKey(event) ? container.data.events.get(event).size() : 0;
 		if(currcom > 0 && am > 0 && currcom >= container.data.events.get(event).size()) currcom = 0;
-		texts.get("status").string = "Command: " + (currcom  + 1) + " of " + am + "; Event: " + event;
+		texts.get("status").string = "Command: " + (currcom  + 1) + " of " + am + "; Ev.: " + event;
 		fields.get("command").setText(am == 0 ? "" : container.data.events.get(event).get(currcom));
 	}
 
@@ -278,6 +367,12 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 		}
 	}
 
+	public void savecmd(){
+		String event = container.data.type == Type.BASIC ? Type.BASIC.cmd_events[0] : Type.RENT.cmd_events[edittext0 ? 0 : 1];
+		if(!container.data.events.containsKey(event)) return;
+		container.data.events.get(event).set(currcom, fields.get("command").getText());
+	}
+
 	@Override
 	public void predraw(float ticks, int mx, int my){
 		//
@@ -291,7 +386,15 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 	@Override
 	protected void drawlast(float pticks, int mx, int my){
 		info.clear();
-		//
+		for(BasicText text : texts.values()){
+			if(text.hoverable && text.hovered(mx, my)) info.add(text.string);
+		}
+		if(buttons.get("cmd_add").hovered(mx, my)) info.add("Add Command");
+		if(buttons.get("cmd_rem").hovered(mx, my)) info.add("Remove Command");
+		if(buttons.get("cmd_prev").hovered(mx, my)) info.add("Previous Command");
+		if(buttons.get("cmd_next").hovered(mx, my)) info.add("Next Command");
+		if(buttons.get("save").hovered(mx, my)) info.add("Save and Exit");
+		if(buttons.get("act").hovered(mx, my)) info.add("Save and Activate");
 		if(info.size() > 0) drawHoveringText(info, mx, my);
 	}
 	
