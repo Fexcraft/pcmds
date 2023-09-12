@@ -259,7 +259,7 @@ public class SignData {
 			return new String[]{ "fee" };
 		}
 
-		private String durtag(){
+		public String durtag(){
 			return this == BASIC ? settings[2] : settings[1];
 		}
 
