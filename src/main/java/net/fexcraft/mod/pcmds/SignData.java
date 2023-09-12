@@ -1,7 +1,6 @@
 package net.fexcraft.mod.pcmds;
 
 import static net.fexcraft.mod.pcmds.EditCmd.trs;
-import static net.fexcraft.mod.pcmds.PayableCommandSigns.OP_PLAYER;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,6 +36,7 @@ public class SignData {
 	public HashMap<String, String[]> ctext = new HashMap<>();
 	public Type type = Type.BASIC;
 	public Executor exec = Executor.SERVER;
+	public UUID exid;
 	public HashMap<String, ArrayList<String>> events = new HashMap<>();
 	public Settings settings = new Settings();
 	public long price = 10000;
@@ -53,6 +53,11 @@ public class SignData {
 
 	public SignData load(SignCapImpl cap, TileEntitySign tile, NBTTagCompound com){
 		if(com.hasKey("type")) type = Type.valueOf(com.getString("type"));
+		if(com.hasKey("exec")) exec = Executor.valueOf(com.getString("exec"));
+		if(exec == Executor.OPERATOR && exid != null){
+			com.setLong("exec0", exid.getMostSignificantBits());
+			com.setLong("exec1", exid.getMostSignificantBits());
+		}
 		price = com.getLong("fee");
 		settings.clear();
 		events.clear();
@@ -113,6 +118,10 @@ public class SignData {
 
 	public NBTTagCompound save(NBTTagCompound com){
 		com.setString("type", type.toString());
+		com.setString("exec", exec.toString());
+		if(exec == Executor.OPERATOR && com.hasKey("exec0")){
+			exid = new UUID(com.getLong("exec0"), com.getLong("exec1"));
+		}
 		com.setLong("fee", price);
 		for(Entry<String, Integer> entry : settings.entrySet()){
 			com.setInteger("set:" + entry.getKey(), entry.getValue());
@@ -179,8 +188,10 @@ public class SignData {
 		if(cmds == null || cmds.isEmpty()) return;
 		for(String cmd : cmds){
 			cmd = format(cmd, tile, state, player, uuid);
-			if(cmd.startsWith("p!")) cmdman.executeCommand(player, cmd.substring(2));
-			else if(cmd.startsWith("o!")) cmdman.executeCommand(OP_PLAYER.get(pos.dim), cmd.substring(2));
+			boolean p = cmd.startsWith("p!");
+			boolean o = cmd.startsWith("o!");
+			if(exec == Executor.PLAYER || p) cmdman.executeCommand(player, p ? cmd.substring(2) : cmd);
+			else if(exec == Executor.OPERATOR || o) cmdman.executeCommand(PayableCommandSigns.getOpPlayer(pos.dim, exid), o ? cmd.substring(2) : cmd);
 			else cmdman.executeCommand(new CommandSender(event.getWorld(), noplayer ? null : event.getEntityPlayer()), format(cmd, tile, state, player, uuid));
 		}
 		cooldown = 0;
@@ -304,7 +315,8 @@ public class SignData {
 			World world = Static.getServer().getWorld(pos.dim);
 			for(String cmd : cmds){
 				cmd = format(cmd, null, null, null, uuid);
-				if(cmd.startsWith("o!")) cmdman.executeCommand(OP_PLAYER.get(pos.dim), cmd.substring(2));
+				boolean o = cmd.startsWith("o!");
+				if(exec == Executor.OPERATOR || o) cmdman.executeCommand(PayableCommandSigns.getOpPlayer(pos.dim, exid), o ? cmd.substring(2) : cmd);
 				else cmdman.executeCommand(new CommandSender(world, null), format(cmd, null, null, null, uuid));
 			}
 			int cld = settings.get("cooldown", 0);
