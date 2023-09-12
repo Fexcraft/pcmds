@@ -21,7 +21,7 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 	private static final ResourceLocation TEXTURE = new ResourceLocation("pcmds:textures/gui/main.png");
 	private static ArrayList<String> info = new ArrayList<>();
 	private boolean edittext0 = true;
-	private int currcom;
+	private int currcom, days, hours, mins;
 
 	public PCMDS_UI(EntityPlayer player, int x, int y, int z){
 		super(TEXTURE, new PCMDS_CON(player, x, y, z), player);
@@ -55,11 +55,38 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 		});
 		texts.put("type_rent", new BasicText(guiLeft + 84, guiTop + 40, 74, color, "Rent/Timed"));
 		//
-		buttons.put("time_days", new BasicButton("days", guiLeft + 162, guiTop + 38, 162, 38, 28, 12, true));
+		buttons.put("time_days", new BasicButton("days", guiLeft + 162, guiTop + 38, 162, 38, 28, 12, true){
+			@Override
+			public boolean onclick(int mx, int my, int mb){
+				days += mb == 0 ? 1 : -1;
+				if(days > 31) days = 0;
+				if(days < 0) days = 31;
+				update(false);
+				return true;
+			}
+		});
 		texts.put("time_days", new BasicText(guiLeft + 164, guiTop + 40, 24, color, "-d").autoscale().hoverable(true));
-		buttons.put("time_hours", new BasicButton("hours", guiLeft + 192, guiTop + 38, 192, 38, 28, 12, true));
+		buttons.put("time_hours", new BasicButton("hours", guiLeft + 192, guiTop + 38, 192, 38, 28, 12, true){
+			@Override
+			public boolean onclick(int mx, int my, int mb){
+				hours += mb == 0 ? 1 : -1;
+				if(hours > 24) hours = 0;
+				if(hours < 0) hours = 24;
+				update(false);
+				return true;
+			}
+		});
 		texts.put("time_hours", new BasicText(guiLeft + 194, guiTop + 40, 24, color, "-h").autoscale().hoverable(true));
-		buttons.put("time_mins", new BasicButton("mins", guiLeft + 222, guiTop + 38, 222, 38, 28, 12, true));
+		buttons.put("time_mins", new BasicButton("mins", guiLeft + 222, guiTop + 38, 222, 38, 28, 12, true){
+			@Override
+			public boolean onclick(int mx, int my, int mb){
+				mins += mb == 0 ? 1 : -1;
+				if(mins > 60) mins = 0;
+				if(mins < 0) mins = 60;
+				update(false);
+				return true;
+			}
+		});
 		texts.put("time_mins", new BasicText(guiLeft + 224, guiTop + 40, 24, color, "-m").autoscale().hoverable(true));
 		//
 		texts.put("executor", new BasicText(guiLeft + 8, guiTop + 58, 68, color, "Executor:"));
@@ -204,6 +231,7 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 			@Override
 			public boolean onclick(int mx, int my, int mb){
 				container.data.price = parsefee();
+				container.data.settings.put(container.data.type.durtag(), gettime());
 				savecmd();
 				savetext();
 				NBTTagCompound com = new NBTTagCompound();
@@ -220,6 +248,7 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 			@Override
 			public boolean onclick(int mx, int my, int mb){
 				container.data.price = parsefee();
+				container.data.settings.put(container.data.type.durtag(), gettime());
 				savecmd();
 				savetext();
 				NBTTagCompound com = new NBTTagCompound();
@@ -244,6 +273,10 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 		if(packet){
 			fields.get("fee").setText(Config.getWorthAsString(container.data.price, false));
 			fields.get("operator").setText(container.opname);
+			int time = container.data.settings.get(container.data.type.durtag(), 1);
+			mins = time % 60;
+			hours = (time % 1440) / 60;
+			days = time / 1440;
 		}
 		if(container.data.type == Type.BASIC){
 			button = buttons.get("type_basic");
@@ -255,6 +288,7 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 			texts.get("time_days").string = "-";
 			texts.get("time_hours").string = "-";
 			texts.get("time_mins").string = "-";
+			days = hours = mins = 0;
 		}
 		else{
 			button = buttons.get("type_basic");
@@ -266,9 +300,9 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 			buttons.get("time_days").enabled = true;
 			buttons.get("time_hours").enabled = true;
 			buttons.get("time_mins").enabled = true;
-			texts.get("time_days").string = "0d";
-			texts.get("time_hours").string = "0h";
-			texts.get("time_mins").string = "0m";
+			texts.get("time_days").string = days + "d";
+			texts.get("time_hours").string = hours + "h";
+			texts.get("time_mins").string = mins + "m";
 		}
 		if(container.data.exec == Executor.OPERATOR){
 			button = buttons.get("exe_operator");
@@ -395,6 +429,10 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 			e.printStackTrace();
 			return container.data.price;
 		}
+	}
+
+	public int gettime(){
+		return days * 1440 + hours * 60 + mins;
 	}
 
 	@Override
