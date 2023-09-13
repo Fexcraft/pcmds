@@ -104,7 +104,7 @@ public class SignCapImpl implements SignCapability.Listener {
 		NBTTagCompound com = new NBTTagCompound();
 		com.setBoolean("sign:active", active);
 		if(data == null) return com;
-		com.setTag("sign:data", data.save(new NBTTagCompound()));
+		com.setTag("sign:data", data.save(new NBTTagCompound(), false));
 		return com;
 	}
 
