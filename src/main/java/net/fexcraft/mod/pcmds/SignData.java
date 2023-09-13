@@ -1,6 +1,7 @@
 package net.fexcraft.mod.pcmds;
 
 import static net.fexcraft.mod.pcmds.EditCmd.trs;
+import static net.fexcraft.mod.pcmds.SignCapImpl.formattedComponent;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,7 +32,8 @@ import net.minecraftforge.event.entity.player.PlayerInteractEvent;
  *
  */
 public class SignData {
-	
+
+	public static String remaining = "{remaining}";
 	public static final int MINUTE = 60000;
 	public HashMap<String, String[]> ctext = new HashMap<>();
 	public Type type = Type.BASIC;
@@ -41,6 +43,7 @@ public class SignData {
 	public Settings settings = new Settings();
 	public long price = 10000;
 	public boolean noplayer;
+	public boolean showremaining;
 	public DimPos pos;
 	//
 	public long refresh = 0, cooldown = 0;
@@ -100,13 +103,14 @@ public class SignData {
 		}
 		if(com.hasKey("cooldown")) cooldown = com.getLong("cooldown");
 		if(com.hasKey("noplayer")) noplayer = com.getBoolean("noplayer");
+		if(com.hasKey("show_time")) showremaining = com.getBoolean("show_time");
 		if(cap == null || tile == null) return this;
 		try{
 			String[] text = this.ctext.get(type == Type.RENT && uses.isEmpty() ? type.cmd_events[1] : type.cmd_events[0]);
 			if(text != null){
 				for(int i = 0; i < text.length; i++){
 					if(i >= tile.signText.length) break;
-					tile.signText[i] = SignCapImpl.formattedComponent(text[i]);
+					tile.signText[i] = formattedComponent(text[i]);
 				}
 			}
 		}
@@ -116,7 +120,7 @@ public class SignData {
 		return this;
 	}
 
-	public NBTTagCompound save(NBTTagCompound com){
+	public NBTTagCompound save(NBTTagCompound com, boolean export){
 		com.setString("type", type.toString());
 		com.setString("exec", exec.toString());
 		if(exec == Executor.OPERATOR && com.hasKey("exec0")){
@@ -140,16 +144,19 @@ public class SignData {
 			}
 			com.setTag("text:" + entry.getKey(), texts);
 		}
-		if(pos != null) com.setString("pos", pos.toString());
-		if(refresh > 0) com.setLong("refresh", refresh);
-		if(uses.size() > 0){
-			NBTTagCompound use = new NBTTagCompound();
-			for(Entry<UUID, Integer> entry : uses.entrySet()){
-				use.setInteger(entry.getKey().toString(), entry.getValue());
+		if(!export){
+			if(pos != null) com.setString("pos", pos.toString());
+			if(refresh > 0) com.setLong("refresh", refresh);
+			if(uses.size() > 0){
+				NBTTagCompound use = new NBTTagCompound();
+				for(Entry<UUID, Integer> entry : uses.entrySet()){
+					use.setInteger(entry.getKey().toString(), entry.getValue());
+				}
+				com.setTag("uses", use);
 			}
-			com.setTag("uses", use);
+			if(cooldown > 0) com.setLong("cooldown", cooldown);
+			if(showremaining) com.setBoolean("show_time", showremaining);
 		}
-		if(cooldown > 0) com.setLong("cooldown", cooldown);
 		com.setBoolean("noplayer", noplayer);
 		return com;
 	}
@@ -205,10 +212,17 @@ public class SignData {
 			setupTimer(false);
 		}
 		String[] text = ctext.get(type.cmd_events[0]);
+		showremaining = false;
 		if(text != null){
 			for(int i = 0; i < text.length; i++){
 				if(i >= tile.signText.length) break;
-				tile.signText[i] = SignCapImpl.formattedComponent(text[i]);
+				if(text[i] == null) continue;
+				if(type == Type.RENT && text[i].endsWith(remaining)){
+					showremaining = true;
+					tile.signText[i] = formattedComponent(remaining());
+					continue;
+				}
+				tile.signText[i] = formattedComponent(text[i].replace("{name}", player.getName()));
 			}
 			cap.sendUpdate(tile);
 			tile.markDirty();
@@ -236,7 +250,7 @@ public class SignData {
 		}
 		return true;
 	}
-	
+
 	public static enum Type {
 		
 		BASIC(0, "interact"), RENT(1, "start", "end");
@@ -307,6 +321,16 @@ public class SignData {
 	public void processTimed(){
 		refresh = 0;
 		if(type == Type.RENT){
+			TileEntitySign tile = (TileEntitySign)Static.getServer().getWorld(pos.dim).getTileEntity(pos.pos);
+			if(tile == null){
+				ForcedChunks.requestLoad(pos.dim, pos.pos);
+				tile = (TileEntitySign)Static.getServer().getWorld(pos.dim).getTileEntity(pos.pos);
+			}
+			if(tile == null){
+				System.out.println("PCMDS: Sign not found (might be removed?), sign rent end event will be cancelled. DIM: " + pos.dim + ", POS:" + pos.pos.toString());
+				ForcedChunks.requestUnload(pos.dim, pos.pos);
+				return;
+			}
 			UUID uuid = uses.size() == 0 ? null : uses.keySet().toArray(new UUID[0])[0];
 			if(uuid == null) return;
 			ICommandManager cmdman = Static.getServer().getCommandManager();
@@ -321,20 +345,42 @@ public class SignData {
 			}
 			int cld = settings.get("cooldown", 0);
 			if(cld > 0) cooldown = Time.getDate() + (cld * MINUTE);
-			if(ctext.containsKey("start")){
-				TileEntitySign tile = (TileEntitySign)world.getTileEntity(pos.pos);
-				if(tile != null){
-					String[] text = ctext.get(type.cmd_events[1]);
-					for(int i = 0; i < text.length; i++){
-						if(i >= tile.signText.length) break;
-						tile.signText[i] = SignCapImpl.formattedComponent(text[i]);
-					}
-					tile.getCapability(FCLCapabilities.SIGN_CAPABILITY, null).getListener(SignCapImpl.class, SignCapImpl.REGNAME).sendUpdate(tile);
-					tile.markDirty();
+			if(ctext.containsKey("end")){
+				String[] text = ctext.get(type.cmd_events[1]);
+				for(int i = 0; i < text.length; i++){
+					if(i >= tile.signText.length) break;
+					if(text[i] == null) continue;
+					tile.signText[i] = formattedComponent(text[i]);
 				}
+				tile.getCapability(FCLCapabilities.SIGN_CAPABILITY, null).getListener(SignCapImpl.class, SignCapImpl.REGNAME).sendUpdate(tile);
+				tile.markDirty();
 			}
+			ForcedChunks.requestUnload(pos.dim, pos.pos);
 		}
 		uses.clear();
+	}
+
+	public void showRemaining(){
+		TileEntitySign tile = (TileEntitySign)Static.getServer().getWorld(pos.dim).getTileEntity(pos.pos);
+		if(tile != null){
+			String[] text = ctext.get(type.cmd_events[0]);
+			for(int i = 0; i < text.length; i++){
+				if(i >= tile.signText.length) break;
+				if(text[i] == null || !text[i].equals(remaining)) continue;
+				tile.signText[i] = formattedComponent(remaining());
+			}
+			tile.getCapability(FCLCapabilities.SIGN_CAPABILITY, null).getListener(SignCapImpl.class, SignCapImpl.REGNAME).sendUpdate(tile);
+			tile.markDirty();
+		}
+	}
+
+	private String remaining(){
+		int mins = timer % 60;
+		int hours = (timer % 1440) / 60;
+		int days = timer / 1440;
+		String res = days > 0 ? days + "d " : "";
+		if(hours > 0) res += hours + "h ";
+		return res + mins + "m";
 	}
 
 }
