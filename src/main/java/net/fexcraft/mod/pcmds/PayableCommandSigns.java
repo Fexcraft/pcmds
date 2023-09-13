@@ -14,27 +14,27 @@ import java.util.Timer;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import net.fexcraft.lib.mc.utils.Static;
-import net.minecraft.command.ICommandSender;
-import net.minecraftforge.fml.common.network.NetworkRegistry;
-import org.apache.logging.log4j.Logger;
-
 import com.mojang.authlib.GameProfile;
-
 import net.fexcraft.lib.common.math.Time;
 import net.fexcraft.lib.mc.capabilities.sign.SignCapability;
 import net.fexcraft.lib.mc.capabilities.sign.SignCapabilitySerializer;
+import net.fexcraft.lib.mc.utils.Print;
+import net.fexcraft.lib.mc.utils.Static;
+import net.minecraft.block.BlockSign;
+import net.minecraft.command.ICommandSender;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntitySign;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldServer;
+import net.minecraftforge.common.ForgeChunkManager;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityInject;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.common.util.FakePlayerFactory;
+import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
@@ -43,11 +43,14 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerAboutToStartEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartedEvent;
 import net.minecraftforge.fml.common.event.FMLServerStoppingEvent;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent;
+import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.server.permission.DefaultPermissionLevel;
 import net.minecraftforge.server.permission.PermissionAPI;
+import org.apache.logging.log4j.Logger;
 
 /**
  * 
@@ -91,6 +94,7 @@ public class PayableCommandSigns {
 			//
 		}
 		config.save();
+		ForgeChunkManager.setForcedChunkLoadingCallback(this, new ForcedChunks());
     }
 
     @EventHandler
@@ -131,7 +135,7 @@ public class PayableCommandSigns {
 		NBTTagCompound com = new NBTTagCompound();
 		for(Entry<DimPos, SignData> entry : FLOATING.entrySet()){
 			NBTTagCompound tag = new NBTTagCompound();
-			entry.getValue().save(tag);
+			entry.getValue().save(tag, false);
 			com.setTag(entry.getKey().toString(), tag);
 		}
 		try{
@@ -166,6 +170,15 @@ public class PayableCommandSigns {
 		public void onUnload(WorldEvent.Unload event){
 			if(DEFAULT_OP_PLAYER == null || event.getWorld().isRemote) return;
 			OP_PLAYERS.remove(event.getWorld().provider.getDimension());
+		}
+
+		@SubscribeEvent(priority = EventPriority.LOWEST)
+		public void onSignBreak(BlockEvent.BreakEvent event){
+			if(event.getState().getBlock() instanceof BlockSign){
+				if(FLOATING.remove(event.getPos()) != null){
+					Print.chat(event.getPlayer(), "&cRemoved active &ePCMDS &csign.");
+				}
+			}
 		}
 		
 	}
