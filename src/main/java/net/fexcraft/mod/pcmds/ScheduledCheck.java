@@ -21,12 +21,16 @@ public class ScheduledCheck extends TimerTask {
 						data.processTimed();
 						return true;
 					}
+					else if(data.showremaining){
+						data.showRemaining();
+					}
 				}
 				catch(Throwable e){
 					e.printStackTrace();
 				}
 				return false;
 			});
+			ForcedChunks.clear();
 		});
 	}
 
