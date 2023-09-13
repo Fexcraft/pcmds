@@ -264,7 +264,7 @@ public class EditCmd extends CommandBase {
 			return;
 		}
 		case "export":{
-    		StringSelection strsel = new StringSelection(data.save(new NBTTagCompound()).toString());
+    		StringSelection strsel = new StringSelection(data.save(new NBTTagCompound(), true).toString());
     		Toolkit.getDefaultToolkit().getSystemClipboard().setContents(strsel, null);
 			Print.chat(sender, trs("cmd.export"));
 			return;
@@ -291,7 +291,7 @@ public class EditCmd extends CommandBase {
 			}
 			File file = new File(PayableCommandSigns.CFGPATH, "/" + args[1] + ".nbt");
 			try{
-				CompressedStreamTools.write(data.save(new NBTTagCompound()), file);
+				CompressedStreamTools.write(data.save(new NBTTagCompound(), true), file);
 			}
 			catch (IOException e){
 				e.printStackTrace();
