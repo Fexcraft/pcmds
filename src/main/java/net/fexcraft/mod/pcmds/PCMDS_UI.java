@@ -55,7 +55,7 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 		});
 		texts.put("type_rent", new BasicText(guiLeft + 84, guiTop + 40, 74, color, "Rent/Timed"));
 		//
-		buttons.put("time_days", new BasicButton("days", guiLeft + 162, guiTop + 38, 162, 38, 28, 12, true){
+		buttons.put("time_days", new BasicButton("days", guiLeft + 162, guiTop + 31, 162, 31, 28, 12, true){
 			@Override
 			public boolean onclick(int mx, int my, int mb){
 				days += mb == 0 ? 1 : -1;
@@ -65,8 +65,8 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 				return true;
 			}
 		});
-		texts.put("time_days", new BasicText(guiLeft + 164, guiTop + 40, 24, color, "-d").autoscale().hoverable(true));
-		buttons.put("time_hours", new BasicButton("hours", guiLeft + 192, guiTop + 38, 192, 38, 28, 12, true){
+		texts.put("time_days", new BasicText(guiLeft + 164, guiTop + 33, 24, color, "-d").autoscale().hoverable(true));
+		buttons.put("time_hours", new BasicButton("hours", guiLeft + 192, guiTop + 31, 192, 31, 28, 12, true){
 			@Override
 			public boolean onclick(int mx, int my, int mb){
 				hours += mb == 0 ? 1 : -1;
@@ -76,8 +76,8 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 				return true;
 			}
 		});
-		texts.put("time_hours", new BasicText(guiLeft + 194, guiTop + 40, 24, color, "-h").autoscale().hoverable(true));
-		buttons.put("time_mins", new BasicButton("mins", guiLeft + 222, guiTop + 38, 222, 38, 28, 12, true){
+		texts.put("time_hours", new BasicText(guiLeft + 194, guiTop + 33, 24, color, "-h").autoscale().hoverable(true));
+		buttons.put("time_mins", new BasicButton("mins", guiLeft + 222, guiTop + 31, 222, 31, 28, 12, true){
 			@Override
 			public boolean onclick(int mx, int my, int mb){
 				mins += mb == 0 ? 1 : -1;
@@ -87,12 +87,14 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 				return true;
 			}
 		});
-		texts.put("time_mins", new BasicText(guiLeft + 224, guiTop + 40, 24, color, "-m").autoscale().hoverable(true));
+		texts.put("time_mins", new BasicText(guiLeft + 224, guiTop + 33, 24, color, "-m").autoscale().hoverable(true));
 		//
 		texts.put("executor", new BasicText(guiLeft + 8, guiTop + 58, 68, color, "Executor:"));
 		buttons.put("exe_server", new BasicButton("server", guiLeft + 80, guiTop + 56, 80, 56, 54, 12, true){
 			@Override
 			public boolean onclick(int mx, int my, int mb){
+				savetext();
+				savecmd();
 				container.data.exec = Executor.SERVER;
 				update(false);
 				return true;
@@ -102,6 +104,8 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 		buttons.put("exe_player", new BasicButton("player", guiLeft + 138, guiTop + 56, 138, 56, 54, 12, true){
 			@Override
 			public boolean onclick(int mx, int my, int mb){
+				savetext();
+				savecmd();
 				container.data.exec = Executor.PLAYER;
 				update(false);
 				return true;
@@ -111,6 +115,8 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 		buttons.put("exe_operator", new BasicButton("operator", guiLeft + 196, guiTop + 56, 196, 56, 54, 12, true){
 			@Override
 			public boolean onclick(int mx, int my, int mb){
+				savetext();
+				savecmd();
 				container.data.exec = Executor.OPERATOR;
 				update(false);
 				return true;
@@ -118,7 +124,7 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 		});
 		texts.put("exe_operator", new BasicText(guiLeft + 198, guiTop + 58, 50, color, "Operator"));
 		texts.put("operator", new BasicText(guiLeft + 8, guiTop + 72, 68, color, "Name/UUID"));
-		fields.put("operator", new TextField(1, fontRenderer, guiLeft + 80, guiTop + 70, 170, 12));
+		fields.put("operator", new TextField(1, fontRenderer, guiLeft + 80, guiTop + 70, 170, 12).setMaxLength(64));
 		//
 		texts.put("signtext", new BasicText(guiLeft + 8, guiTop + 90, 68, celor, "Sign Text:"));
 		texts.put("text_event_0", new BasicText(guiLeft + 106, guiTop + 90, 68, color, "event0"));
@@ -169,7 +175,7 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 		fields.put("command", new TextField(6, fontRenderer, guiLeft + 7, guiTop + 177, 242, 10).setMaxLength(1024));
 		texts.put("status", new BasicText(guiLeft + 8, guiTop + 192, 152, color, "status").hoverable(true).autoscale());
 		//
-		buttons.put("cmd_add", new BasicButton("ca", guiLeft + 164, guiTop + 190, 164, 190, 12, 12, true){
+		buttons.put("cmd_add", new BasicButton("ca", guiLeft + 178, guiTop + 190, 178, 190, 12, 12, true){
 			@Override
 			public boolean onclick(int mx, int my, int mb){
 				savecmd();
@@ -183,7 +189,7 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 				return true;
 			}
 		});
-		buttons.put("cmd_rem", new BasicButton("cr", guiLeft + 178, guiTop + 190, 178, 190, 12, 12, true){
+		buttons.put("cmd_rem", new BasicButton("cr", guiLeft + 164, guiTop + 190, 164, 190, 12, 12, true){
 			@Override
 			public boolean onclick(int mx, int my, int mb){
 				String event = container.data.type == Type.BASIC ? Type.BASIC.cmd_events[0] : Type.RENT.cmd_events[edittext0 ? 0 : 1];
@@ -230,34 +236,14 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 		buttons.put("save", new BasicButton("save", guiLeft + 224, guiTop + 190, 224, 190, 12, 12, true){
 			@Override
 			public boolean onclick(int mx, int my, int mb){
-				container.data.price = parsefee();
-				container.data.settings.put(container.data.type.durtag(), gettime());
-				savecmd();
-				savetext();
-				NBTTagCompound com = new NBTTagCompound();
-				com.setTag("update", container.data.save(new NBTTagCompound()));
-				com.setBoolean("activate", false);
-				if(container.data.exec == Executor.OPERATOR){
-					com.setString("exec", fields.get("operator").getText());
-				}
-				container.send(Side.SERVER, com);
+				sendsave(false);
 				return true;
 			}
 		});
 		buttons.put("act", new BasicButton("act", guiLeft + 238, guiTop + 190, 238, 190, 12, 12, true){
 			@Override
 			public boolean onclick(int mx, int my, int mb){
-				container.data.price = parsefee();
-				container.data.settings.put(container.data.type.durtag(), gettime());
-				savecmd();
-				savetext();
-				NBTTagCompound com = new NBTTagCompound();
-				com.setTag("update", container.data.save(new NBTTagCompound()));
-				com.setBoolean("activate", true);
-				if(container.data.exec == Executor.OPERATOR){
-					com.setString("exec", fields.get("operator").getText());
-				}
-				container.send(Side.SERVER, com);
+				sendsave(true);
 				return true;
 			}
 		});
@@ -285,9 +271,6 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 			button = buttons.get("type_rent");
 			button.tx = 80;
 			button.ty = 38;
-			texts.get("time_days").string = "-";
-			texts.get("time_hours").string = "-";
-			texts.get("time_mins").string = "-";
 			days = hours = mins = 0;
 		}
 		else{
@@ -297,13 +280,10 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 			button = buttons.get("type_rent");
 			button.tx = 2;
 			button.ty = 226;
-			buttons.get("time_days").enabled = true;
-			buttons.get("time_hours").enabled = true;
-			buttons.get("time_mins").enabled = true;
-			texts.get("time_days").string = days + "d";
-			texts.get("time_hours").string = hours + "h";
-			texts.get("time_mins").string = mins + "m";
 		}
+		texts.get("time_days").string = days + "d";
+		texts.get("time_hours").string = hours + "h";
+		texts.get("time_mins").string = mins + "m";
 		if(container.data.exec == Executor.OPERATOR){
 			button = buttons.get("exe_operator");
 			button.tx = 200;
@@ -382,8 +362,12 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 			button.tx = edittext0 ? 108 : 34;
 		}
 		String event = container.data.type == Type.BASIC ? Type.BASIC.cmd_events[0] : Type.RENT.cmd_events[edittext0 ? 0 : 1];
-		int am = container.data.events.containsKey(event) ? container.data.events.get(event).size() : 0;
-		if(currcom > 0 && am > 0 && currcom >= container.data.events.get(event).size()) currcom = 0;
+		if(!container.data.events.containsKey(event)){
+			container.data.events.put(event, new ArrayList<>());
+			container.data.events.get(event).add("");
+		}
+		int am = container.data.events.get(event).size();
+		if(currcom >= am) currcom = 0;
 		texts.get("status").string = "Command: " + (currcom  + 1) + " of " + am + "; Ev.: " + event;
 		fields.get("command").setText(am == 0 ? "" : container.data.events.get(event).get(currcom));
 	}
@@ -411,6 +395,7 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 	public void savecmd(){
 		String event = container.data.type == Type.BASIC ? Type.BASIC.cmd_events[0] : Type.RENT.cmd_events[edittext0 ? 0 : 1];
 		if(!container.data.events.containsKey(event)) return;
+		if(container.data.events.size() == 0) container.data.events.get(event).add("");
 		container.data.events.get(event).set(currcom, fields.get("command").getText());
 	}
 
@@ -435,6 +420,20 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 		return days * 1440 + hours * 60 + mins;
 	}
 
+	public void sendsave(boolean act){
+		container.data.price = parsefee();
+		container.data.settings.put(container.data.type.durtag(), gettime());
+		savecmd();
+		savetext();
+		NBTTagCompound com = new NBTTagCompound();
+		com.setTag("update", container.data.save(new NBTTagCompound()));
+		com.setBoolean("activate", act);
+		if(container.data.exec == Executor.OPERATOR){
+			com.setString("exec", fields.get("operator").getText());
+		}
+		container.send(Side.SERVER, com);
+	}
+
 	@Override
 	public void predraw(float ticks, int mx, int my){
 		//
@@ -448,16 +447,28 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 	@Override
 	protected void drawlast(float pticks, int mx, int my){
 		info.clear();
-		for(BasicText text : texts.values()){
-			if(text.hoverable && text.hovered(mx, my)) info.add(text.string);
-		}
-		if(buttons.get("cmd_add").hovered(mx, my)) info.add("Add Command");
-		if(buttons.get("cmd_rem").hovered(mx, my)) info.add("Remove Command");
+		if(texts.get("status").hovered(mx, my)) info.add(texts.get("status").string);
+		if(texts.get("time_days").hovered(mx, my)) addTimeInfo();
+		if(texts.get("time_hours").hovered(mx, my)) addTimeInfo();
+		if(texts.get("time_mins").hovered(mx, my)) addTimeInfo();
+		if(buttons.get("cmd_add").hovered(mx, my)) info.add("Add a New Command");
+		if(buttons.get("cmd_rem").hovered(mx, my)) info.add("Remove Current Command");
 		if(buttons.get("cmd_prev").hovered(mx, my)) info.add("Previous Command");
 		if(buttons.get("cmd_next").hovered(mx, my)) info.add("Next Command");
 		if(buttons.get("save").hovered(mx, my)) info.add("Save and Exit");
 		if(buttons.get("act").hovered(mx, my)) info.add("Save and Activate");
 		if(info.size() > 0) drawHoveringText(info, mx, my);
 	}
-	
+
+	private void addTimeInfo(){
+		if(container.data.type == Type.BASIC){
+			info.add("Set renew time for use limits.");
+		}
+		else{
+			info.add("Set rent duration.");
+		}
+		info.add("Left click to increase.");
+		info.add("Right click to decrease.");
+	}
+
 }
