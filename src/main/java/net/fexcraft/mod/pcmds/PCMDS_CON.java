@@ -67,7 +67,9 @@ public class PCMDS_CON extends GenericContainer {
 					if(uuid == null){
 						Print.chat(player, EditCmd.trs("exec_not_found"));
 					}
-					else data.exid = uuid;
+					else{
+						if(!uuid.equals(PayableCommandSigns.DEFAULT_OP_PLAYER)) data.exid = uuid;
+					}
 				}
 				if(packet.getBoolean("activate")){
 					if(impl == null){
@@ -101,7 +103,7 @@ public class PCMDS_CON extends GenericContainer {
 		NBTTagCompound sync = new NBTTagCompound();
 		sync.setTag("signdata", data.save(new NBTTagCompound()));
 		try{
-			sync.setString("opname", PayableCommandSigns.OP_PLAYER_ID == null ? "" : Static.getServer().getPlayerProfileCache().getProfileByUUID(PayableCommandSigns.OP_PLAYER_ID).toString());
+			sync.setString("opname", PayableCommandSigns.DEFAULT_OP_PLAYER == null ? "" : Static.getServer().getPlayerProfileCache().getProfileByUUID(PayableCommandSigns.DEFAULT_OP_PLAYER).getName());
 		}
 		catch(Exception e){
 			e.printStackTrace();
