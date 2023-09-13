@@ -133,6 +133,7 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 			@Override
 			public boolean onclick(int mx, int my, int mb){
 				savetext();
+				savecmd();
 				edittext0 = true;
 				update(false);
 				return true;
@@ -142,6 +143,7 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 			@Override
 			public boolean onclick(int mx, int my, int mb){
 				savetext();
+				savecmd();
 				edittext0 = false;
 				update(false);
 				return true;
@@ -158,6 +160,7 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 			@Override
 			public boolean onclick(int mx, int my, int mb){
 				savetext();
+				savecmd();
 				edittext0 = true;
 				update(false);
 				return true;
@@ -167,6 +170,7 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 			@Override
 			public boolean onclick(int mx, int my, int mb){
 				savetext();
+				savecmd();
 				edittext0 = false;
 				update(false);
 				return true;
@@ -426,7 +430,7 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 		savecmd();
 		savetext();
 		NBTTagCompound com = new NBTTagCompound();
-		com.setTag("update", container.data.save(new NBTTagCompound()));
+		com.setTag("update", container.data.save(new NBTTagCompound(), false));
 		com.setBoolean("activate", act);
 		if(container.data.exec == Executor.OPERATOR){
 			com.setString("exec", fields.get("operator").getText());
