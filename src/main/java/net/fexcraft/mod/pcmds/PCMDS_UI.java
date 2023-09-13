@@ -39,6 +39,8 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 		buttons.put("type_basic", new BasicButton("basic", guiLeft + 80, guiTop + 24, 80, 24, 80, 12, true){
 			@Override
 			public boolean onclick(int mx, int my, int mb){
+				savetext();
+				savecmd();
 				container.data.type = Type.BASIC;
 				update(false);
 				return true;
@@ -48,6 +50,8 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 		buttons.put("type_rent", new BasicButton("rent", guiLeft + 80, guiTop + 38, 80, 38, 80, 12, true){
 			@Override
 			public boolean onclick(int mx, int my, int mb){
+				savetext();
+				savecmd();
 				container.data.type = Type.RENT;
 				update(false);
 				return true;
@@ -58,6 +62,8 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 		buttons.put("time_days", new BasicButton("days", guiLeft + 162, guiTop + 31, 162, 31, 28, 12, true){
 			@Override
 			public boolean onclick(int mx, int my, int mb){
+				savetext();
+				savecmd();
 				days += mb == 0 ? 1 : -1;
 				if(days > 31) days = 0;
 				if(days < 0) days = 31;
@@ -69,6 +75,8 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 		buttons.put("time_hours", new BasicButton("hours", guiLeft + 192, guiTop + 31, 192, 31, 28, 12, true){
 			@Override
 			public boolean onclick(int mx, int my, int mb){
+				savetext();
+				savecmd();
 				hours += mb == 0 ? 1 : -1;
 				if(hours > 24) hours = 0;
 				if(hours < 0) hours = 24;
@@ -80,6 +88,8 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 		buttons.put("time_mins", new BasicButton("mins", guiLeft + 222, guiTop + 31, 222, 31, 28, 12, true){
 			@Override
 			public boolean onclick(int mx, int my, int mb){
+				savetext();
+				savecmd();
 				mins += mb == 0 ? 1 : -1;
 				if(mins > 60) mins = 0;
 				if(mins < 0) mins = 60;
@@ -182,6 +192,7 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 		buttons.put("cmd_add", new BasicButton("ca", guiLeft + 178, guiTop + 190, 178, 190, 12, 12, true){
 			@Override
 			public boolean onclick(int mx, int my, int mb){
+				savetext();
 				savecmd();
 				String event = container.data.type == Type.BASIC ? Type.BASIC.cmd_events[0] : Type.RENT.cmd_events[edittext0 ? 0 : 1];
 				if(!container.data.events.containsKey(event)){
@@ -196,6 +207,8 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 		buttons.put("cmd_rem", new BasicButton("cr", guiLeft + 164, guiTop + 190, 164, 190, 12, 12, true){
 			@Override
 			public boolean onclick(int mx, int my, int mb){
+				savetext();
+				savecmd();
 				String event = container.data.type == Type.BASIC ? Type.BASIC.cmd_events[0] : Type.RENT.cmd_events[edittext0 ? 0 : 1];
 				if(!container.data.events.containsKey(event)) return true;
 				container.data.events.get(event).remove(currcom);
@@ -208,6 +221,7 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 		buttons.put("cmd_prev", new BasicButton("cp", guiLeft + 192, guiTop + 190, 192, 190, 12, 12, true){
 			@Override
 			public boolean onclick(int mx, int my, int mb){
+				savetext();
 				savecmd();
 				String event = container.data.type == Type.BASIC ? Type.BASIC.cmd_events[0] : Type.RENT.cmd_events[edittext0 ? 0 : 1];
 				if(!container.data.events.containsKey(event)){
@@ -224,6 +238,7 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 		buttons.put("cmd_next", new BasicButton("cn", guiLeft + 206, guiTop + 190, 206, 190, 12, 12, true){
 			@Override
 			public boolean onclick(int mx, int my, int mb){
+				savetext();
 				savecmd();
 				String event = container.data.type == Type.BASIC ? Type.BASIC.cmd_events[0] : Type.RENT.cmd_events[edittext0 ? 0 : 1];
 				if(!container.data.events.containsKey(event)){
