@@ -60,7 +60,6 @@ public class SignCapImpl implements SignCapability.Listener {
 			data.pos = new DimPos(tile);
 			sendUpdate(tile);
 			cap.setActive();
-			event.getEntityPlayer().openGui(PayableCommandSigns.INSTANCE, 0, event.getWorld(), tile.getPos().getX(), tile.getPos().getY(), tile.getPos().getZ());
 			return true;
 		}
 		SignData fldt = PayableCommandSigns.FLOATING.get(data.pos);
