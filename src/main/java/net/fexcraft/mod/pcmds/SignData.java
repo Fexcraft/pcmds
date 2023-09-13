@@ -217,9 +217,9 @@ public class SignData {
 			for(int i = 0; i < text.length; i++){
 				if(i >= tile.signText.length) break;
 				if(text[i] == null) continue;
-				if(type == Type.RENT && text[i].endsWith(remaining)){
+				if(type == Type.RENT && text[i].contains(remaining)){
 					showremaining = true;
-					tile.signText[i] = formattedComponent(remaining());
+					tile.signText[i] = formattedComponent(text[i].replace(remaining, remaining()));
 					continue;
 				}
 				tile.signText[i] = formattedComponent(text[i].replace("{name}", player.getName()));
@@ -366,8 +366,8 @@ public class SignData {
 			String[] text = ctext.get(type.cmd_events[0]);
 			for(int i = 0; i < text.length; i++){
 				if(i >= tile.signText.length) break;
-				if(text[i] == null || !text[i].equals(remaining)) continue;
-				tile.signText[i] = formattedComponent(remaining());
+				if(text[i] == null || !text[i].contains(remaining)) continue;
+				tile.signText[i] = formattedComponent(text[i].replace(remaining, remaining()));
 			}
 			tile.getCapability(FCLCapabilities.SIGN_CAPABILITY, null).getListener(SignCapImpl.class, SignCapImpl.REGNAME).sendUpdate(tile);
 			tile.markDirty();
