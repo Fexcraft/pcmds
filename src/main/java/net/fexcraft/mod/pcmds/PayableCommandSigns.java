@@ -70,7 +70,7 @@ public class PayableCommandSigns {
 	public static final Capability<SignCapability> SIGNCAP = null;
 	public static File CFGPATH, ROOTPATH;
 	public static HashMap<Integer, HashMap<UUID, FakePlayer>> OP_PLAYERS = new HashMap<>();
-	public static UUID OP_PLAYER_ID;
+	public static UUID DEFAULT_OP_PLAYER;
 	@Mod.Instance(MODID)
 	public static PayableCommandSigns INSTANCE;
 
@@ -81,11 +81,15 @@ public class PayableCommandSigns {
 		MinecraftForge.EVENT_BUS.register(new SubEventHandler());
 		CFGPATH = new File(ROOTPATH = event.getModConfigurationDirectory(), "/pcmds");
 		if(!CFGPATH.exists()) CFGPATH.mkdirs();
-		Configuration config = new Configuration(event.getSuggestedConfigurationFile());
+		Configuration config = new Configuration(event.getSuggestedConfigurationFile(), "2");
 		config.load();
-		boolean enabled = config.getBoolean("use_fakeplayer", "general", false, "Should a fake-player be used to handle commands prefixed with 'o!' ?");
-		String string = config.getString("fakeplayer_uuid", "general", "null", "Default UUID of the fake-player.");
-		if(enabled) OP_PLAYER_ID = UUID.fromString(string);
+		String string = config.getString("fakeplayer_uuid", "general", "null", "A Forge 'fake-player' is used to execute 'operator' type commands or commands prefixed with 'o!'. This setting sets the default UUID for that process.");
+		try{
+			DEFAULT_OP_PLAYER = UUID.fromString(string);
+		}
+		catch(Exception e){
+			//
+		}
 		config.save();
     }
 
@@ -152,15 +156,15 @@ public class PayableCommandSigns {
 		
 		@SubscribeEvent
 		public void onLoad(WorldEvent.Load event){
-			if(OP_PLAYER_ID == null || event.getWorld().isRemote) return;
+			if(DEFAULT_OP_PLAYER == null || event.getWorld().isRemote) return;
 			int dim = event.getWorld().provider.getDimension();
 			if(!OP_PLAYERS.containsKey(dim)) OP_PLAYERS.put(dim, new HashMap<>());
-			OP_PLAYERS.get(dim).put(OP_PLAYER_ID, FakePlayerFactory.get((WorldServer)event.getWorld(), new GameProfile(OP_PLAYER_ID, "PCMDS")));
+			OP_PLAYERS.get(dim).put(DEFAULT_OP_PLAYER, FakePlayerFactory.get((WorldServer)event.getWorld(), new GameProfile(DEFAULT_OP_PLAYER, "PCMDS")));
 		}
 		
 		@SubscribeEvent
 		public void onUnload(WorldEvent.Unload event){
-			if(OP_PLAYER_ID == null || event.getWorld().isRemote) return;
+			if(DEFAULT_OP_PLAYER == null || event.getWorld().isRemote) return;
 			OP_PLAYERS.remove(event.getWorld().provider.getDimension());
 		}
 		
@@ -211,13 +215,13 @@ public class PayableCommandSigns {
 	}
 
 	public static ICommandSender getOpPlayer(int dim, UUID exid){
-		if(exid == null) return OP_PLAYERS.get(dim).get(OP_PLAYER_ID);
+		if(exid == null) return OP_PLAYERS.get(dim).get(DEFAULT_OP_PLAYER);
 		if(!OP_PLAYERS.get(dim).containsKey(exid)){
 			GameProfile gp = Static.getServer().getPlayerProfileCache().getProfileByUUID(exid);
 			if(Static.getServer().getPlayerList().canSendCommands(gp)){
-				OP_PLAYERS.get(dim).put(OP_PLAYER_ID, FakePlayerFactory.get(Static.getServer().getWorld(dim), new GameProfile(exid, "PCMDS")));
+				OP_PLAYERS.get(dim).put(DEFAULT_OP_PLAYER, FakePlayerFactory.get(Static.getServer().getWorld(dim), new GameProfile(exid, "PCMDS")));
 			}
-			else return OP_PLAYERS.get(dim).get(OP_PLAYER_ID);
+			else return OP_PLAYERS.get(dim).get(DEFAULT_OP_PLAYER);
 		}
 		return OP_PLAYERS.get(dim).get(exid);
 	}
