@@ -175,7 +175,7 @@ public class PayableCommandSigns {
 		@SubscribeEvent(priority = EventPriority.LOWEST)
 		public void onSignBreak(BlockEvent.BreakEvent event){
 			if(event.getState().getBlock() instanceof BlockSign){
-				if(FLOATING.remove(event.getPos()) != null){
+				if(FLOATING.remove(new DimPos(event.getWorld().provider.getDimension(), event.getPos())) != null){
 					Print.chat(event.getPlayer(), "&cRemoved active &ePCMDS &csign.");
 				}
 			}
@@ -195,6 +195,12 @@ public class PayableCommandSigns {
 		
 		public BlockPos pos;
 		public int dim, hash;
+
+		public DimPos(int dim, BlockPos pos){
+			this.dim = dim;
+			this.pos = pos;
+			hash = Objects.hash(dim, pos.getX(), pos.getY(), pos.getZ());
+		}
 		
 		public DimPos(String str){
 			String[] split = str.split(":");
