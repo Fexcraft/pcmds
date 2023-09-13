@@ -101,7 +101,7 @@ public class PCMDS_CON extends GenericContainer {
 
 	private void sendSync(){
 		NBTTagCompound sync = new NBTTagCompound();
-		sync.setTag("signdata", data.save(new NBTTagCompound()));
+		sync.setTag("signdata", data.save(new NBTTagCompound(), false));
 		try{
 			sync.setString("opname", PayableCommandSigns.DEFAULT_OP_PLAYER == null ? "" : Static.getServer().getPlayerProfileCache().getProfileByUUID(PayableCommandSigns.DEFAULT_OP_PLAYER).getName());
 		}
