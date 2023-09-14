@@ -26,6 +26,7 @@ import net.minecraft.nbt.JsonToNBT;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.tileentity.TileEntitySign;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.event.ClickEvent;
@@ -78,18 +79,7 @@ public class EditCmd extends CommandBase {
     		return;
 		}
 		case "activate":{
-	    	if(impl == null){
-	    		Print.chat(sender, trs("sign_none_selected"));
-	    	}
-	    	else{
-	    		if(!impl.data.valid()){
-		    		Print.chat(sender, trs("sign_incomplete"));
-	    		}
-	    		else{
-		    		impl.setActive(cap.getTileEntity());
-		    		Print.chat(sender, trs("sign_activated"));
-	    		}
-	    	}
+			activate(sender, impl, cap.getTileEntity());
     		return;
 		}
 		case "status":{
@@ -352,6 +342,21 @@ public class EditCmd extends CommandBase {
 			return;
 		}
     }
+
+	public static void activate(ICommandSender sender, SignCapImpl impl, TileEntitySign tile){
+		if(impl == null){
+			Print.chat(sender, trs("sign_none_selected"));
+		}
+		else{
+			if(!impl.data.valid()){
+				Print.chat(sender, trs("sign_incomplete"));
+			}
+			else{
+				impl.setActive(tile);
+				Print.chat(sender, trs("sign_activated"));
+			}
+		}
+	}
 
 	private String findEvent(ICommandSender sender, SignData data, String string){
 		boolean found = false;
