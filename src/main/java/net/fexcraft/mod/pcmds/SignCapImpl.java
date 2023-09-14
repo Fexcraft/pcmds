@@ -69,6 +69,8 @@ public class SignCapImpl implements SignCapability.Listener {
 			if(mode.set_edit){
 				mode.pos = tile.getPos();
 				active = false;
+				data.ctext.put("predit", new String[tile.signText.length]);
+				for(int i = 0; i < tile.signText.length; i++) data.ctext.get("predit")[i] = tile.signText[i].getUnformattedText();
 				tile.signText[0] = formattedComponent("&0- - - -");
 				tile.signText[1] = formattedComponent("&0[&6PcmdS&0]");
 				tile.signText[2] = formattedComponent("&einactive");
@@ -129,6 +131,14 @@ public class SignCapImpl implements SignCapability.Listener {
 			sign.signText[2] = formattedComponent("&aactive");
 			sign.signText[3] = formattedComponent("&0- - - -");
 		}
+		else if(data.ctext.containsKey("predit")){
+			String[] text = data.ctext.get("predit");
+			for(int i = 0; i <  sign.signText.length; i++){
+				if(i >= text.length || text[i] == null) break;
+				sign.signText[i] = new TextComponentString(text[i]);
+			}
+			data.ctext.remove("predit");
+		}
 		else{
 			String[] text = data.ctext.get(data.type.initialtext());
 			for(int i = 0; i < text.length; i++){
@@ -137,6 +147,7 @@ public class SignCapImpl implements SignCapability.Listener {
 			}
 		}
 		sendUpdate(sign);
+		sign.markDirty();
 	}
 	
 }
