@@ -31,6 +31,8 @@ public class PCMDS_CON extends GenericContainer {
 		this.z = z;
 		sign = (TileEntitySign)entity.world.getTileEntity(new BlockPos(x, y, z));
 		if(entity.world.isRemote) return;
+		SignData fldt = PayableCommandSigns.FLOATING.get(sign.getPos());
+		if(fldt != null && data != fldt) data = fldt;
 		data = sign.getCapability(FCLCapabilities.SIGN_CAPABILITY, null).getListener(SignCapImpl.class, SignCapImpl.REGNAME).data;
 		if(!PermissionAPI.hasPermission(player, PayableCommandSigns.EDIT_SIGN_PERM)){
 			Print.chat(player, EditCmd.trs("no_permission"));
@@ -72,18 +74,7 @@ public class PCMDS_CON extends GenericContainer {
 					}
 				}
 				if(packet.getBoolean("activate")){
-					if(impl == null){
-						Print.chat(player, EditCmd.trs("sign_none_selected"));
-					}
-					else{
-						if(!impl.data.valid()){
-							Print.chat(player, EditCmd.trs("sign_incomplete"));
-						}
-						else{
-							impl.setActive(sign);
-							Print.chat(player, EditCmd.trs("sign_activated"));
-						}
-					}
+					EditCmd.activate(player, impl, sign);
 				}
 				player.closeScreen();
 			}
