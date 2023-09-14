@@ -79,7 +79,8 @@ public class SignData {
 				events.put(event, alist);
 			}
 		}
-		for(String event : type.cmd_events){
+		String[] txt = refresh == 0 ? type.cmd_events : type.cmdtexts();
+		for(String event : txt){
 			if(!com.hasKey("text:" + event)) continue;
 			NBTTagCompound texts = com.getCompoundTag("text:" + event);
 			if(!ctext.containsKey(event)) ctext.put(event, new String[textlength]);
@@ -280,7 +281,16 @@ public class SignData {
 		public String initialtext(){
 			return this == BASIC ? cmd_events[0] : cmd_events[1];
 		}
-		
+
+		public String[] cmdtexts(){
+			if(this == BASIC){
+				return new String[]{ cmd_events[0], "predit" };
+			}
+			else{
+				return new String[]{ cmd_events[0], cmd_events[1], "predit" };
+			}
+		}
+
 	}
 
 	public static enum Executor {
@@ -321,6 +331,7 @@ public class SignData {
 	public void processTimed(){
 		refresh = 0;
 		if(type == Type.RENT){
+			ctext.remove("predit");
 			TileEntitySign tile = (TileEntitySign)Static.getServer().getWorld(pos.dim).getTileEntity(pos.pos);
 			if(tile == null){
 				ForcedChunks.requestLoad(pos.dim, pos.pos);
