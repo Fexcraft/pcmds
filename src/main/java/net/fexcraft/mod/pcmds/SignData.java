@@ -12,7 +12,7 @@ import net.fexcraft.lib.common.math.Time;
 import net.fexcraft.lib.mc.capabilities.FCLCapabilities;
 import net.fexcraft.lib.mc.utils.Print;
 import net.fexcraft.lib.mc.utils.Static;
-import net.fexcraft.mod.fsmm.api.Account;
+import net.fexcraft.mod.fsmm.data.Account;
 import net.fexcraft.mod.fsmm.util.DataManager;
 import net.fexcraft.mod.pcmds.PayableCommandSigns.DimPos;
 import net.minecraft.block.state.IBlockState;
