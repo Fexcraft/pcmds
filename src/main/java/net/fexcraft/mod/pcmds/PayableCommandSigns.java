@@ -63,7 +63,7 @@ public class PayableCommandSigns {
 	
     public static final String MODID = "pcmds";
     public static final String NAME = "Payable Command Signs";
-    public static final String VERSION = "2.0";
+    public static final String VERSION = "2.0.1";
     public static final String EDIT_SIGN_PERM = "pcmds.edit_sign";
     public static Timer TIMER;
     private static Logger logger;
