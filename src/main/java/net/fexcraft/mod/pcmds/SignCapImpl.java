@@ -2,8 +2,8 @@ package net.fexcraft.mod.pcmds;
 
 import static net.fexcraft.mod.pcmds.EditCmd.trs;
 
+import net.fexcraft.lib.common.utils.Formatter;
 import net.fexcraft.lib.mc.capabilities.sign.SignCapability;
-import net.fexcraft.lib.mc.utils.Formatter;
 import net.fexcraft.lib.mc.utils.Print;
 import net.fexcraft.mod.pcmds.PayableCommandSigns.DimPos;
 import net.fexcraft.mod.pcmds.PayableCommandSigns.EditMode;
