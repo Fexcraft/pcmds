@@ -423,7 +423,7 @@ public class PCMDS_UI extends GenericGui<PCMDS_CON> {
 
 	public long parsefee(){
 		try{
-			String str = fields.get("fee").getText().replace(Config.getDot(), "").replace(",", ".");
+			String str = fields.get("fee").getText().replace(Config.DOT, "").replace(",", ".");
 			if(str.length() == 0) return 0;
 			String format = df.format(Double.parseDouble(str));
 			return Long.parseLong(format.replace(",", "").replace(".", ""));
