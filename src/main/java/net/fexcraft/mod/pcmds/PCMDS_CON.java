@@ -3,10 +3,10 @@ package net.fexcraft.mod.pcmds;
 import java.util.UUID;
 
 import com.mojang.authlib.GameProfile;
-import net.fexcraft.lib.mc.capabilities.FCLCapabilities;
 import net.fexcraft.lib.mc.gui.GenericContainer;
 import net.fexcraft.lib.mc.utils.Print;
 import net.fexcraft.lib.mc.utils.Static;
+import net.fexcraft.mod.uni.util.FCLCapabilities;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntitySign;
